@@ -35,7 +35,12 @@ pico_sdk_init()
 
 # Add executable. Default name is the project name, version 0.1
 
-add_executable(PicoDisplay main.c picodisplay.c)
+add_executable(PicoDisplay
+    main.c
+    picodisplay.c
+    display_driver.c
+    display_utils.c
+)
 
 pico_set_program_name(PicoDisplay "PicoDisplay")
 pico_set_program_version(PicoDisplay "0.1")

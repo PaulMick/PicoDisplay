@@ -21,10 +21,17 @@ int init() {
         fprintf(stderr, "Timed out connecting to network \"%s\"\n", WIFI_SSID);
     }
     cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, 1);
+
+    // display driver
+    init_display_driver();
+
+    // display utils
+    init_display_utils();
+    
 }
 
 int run() {
-    while (true) {
+    while (1) {
         printf("Hello World!\n");
         sleep_ms(1000);
     }
