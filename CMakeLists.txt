@@ -59,6 +59,11 @@ target_include_directories(PicoDisplay PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}
 )
 
+# Compile PIO code
+pico_generate_pio_header(PicoDisplay
+    ${CMAKE_CURRENT_LIST_DIR}/hub75.pio
+)
+
 # Add any user requested libraries
 pico_add_library(lwip_http_util NOFLAG)
 pico_mirrored_target_link_libraries(lwip_http_util INTERFACE
@@ -66,10 +71,10 @@ pico_mirrored_target_link_libraries(lwip_http_util INTERFACE
     pico_lwip_mbedtls
     pico_mbedtls
 )
-target_link_libraries(PicoDisplay 
-    # pico_cyw43_arch_none
+target_link_libraries(PicoDisplay
     pico_cyw43_arch_lwip_threadsafe_background
     lwip_http_util
+    hardware_pio
 )
 set_source_files_properties(
     ${PICO_LWIP_PATH}/src/apps/altcp_tls/altcp_tls_mbedtls.c

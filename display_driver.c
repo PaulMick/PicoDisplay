@@ -3,6 +3,9 @@
 #include "hardware/timer.h"
 #include "hardware/irq.h"
 
+// assembled program
+#include "hub75.pio.h"
+
 // pin definitions
 #define R1 5
 #define G1 6
@@ -29,5 +32,5 @@ void init_display_driver() {
     gpio_init_mask(0xf << 9); // LAT and RGB2
     gpio_init_mask(0xf << 14); // SEL0-3
     gpio_init(19); // OE
-    
+
 }
