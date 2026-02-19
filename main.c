@@ -1,25 +1,15 @@
 #include <stdio.h>
-#include "pico/stdlib.h"
-#include "pico/cyw43_arch.h"
 
-
+#include "picodisplay.h"
 
 
 int main()
 {
-    stdio_init_all();
-
-    // Initialise the Wi-Fi chip
-    if (cyw43_arch_init()) {
-        printf("Wi-Fi init failed\n");
-        return -1;
+    int init_success = init();
+    if (init_success != 0) {
+        fprintf(stderr, "Init Failure: %d\n", init_success);
+        return init_success;
     }
-
-    // Example to turn on the Pico W LED
-    cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, 1);
-
-    while (true) {
-        printf("Hello, world!\n");
-        sleep_ms(1000);
-    }
+    int run_success = run();
+    return run_success;
 }
