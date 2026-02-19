@@ -5,6 +5,9 @@
 
 #include "secrets/wifi.h"
 
+#include "display_driver.h"
+#include "display_utils.h"
+
 int init() {
     // stdio
     stdio_init_all();
