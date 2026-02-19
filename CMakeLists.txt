@@ -46,17 +46,31 @@ pico_enable_stdio_usb(PicoDisplay 1)
 
 # Add the standard library to the build
 target_link_libraries(PicoDisplay
-        pico_stdlib)
+    pico_stdlib
+)
 
 # Add the standard include files to the build
 target_include_directories(PicoDisplay PRIVATE
-        ${CMAKE_CURRENT_LIST_DIR}
+    ${CMAKE_CURRENT_LIST_DIR}
 )
 
 # Add any user requested libraries
+pico_add_library(lwip_http_util NOFLAG)
+pico_mirrored_target_link_libraries(lwip_http_util INTERFACE
+    pico_lwip_http
+    pico_lwip_mbedtls
+    pico_mbedtls
+)
 target_link_libraries(PicoDisplay 
-        pico_cyw43_arch_none
-        )
+    # pico_cyw43_arch_none
+    pico_cyw43_arch_lwip_threadsafe_background
+    lwip_http_util
+)
+set_source_files_properties(
+    ${PICO_LWIP_PATH}/src/apps/altcp_tls/altcp_tls_mbedtls.c
+    PROPERTIES
+    COMPILE_OPTIONS "-Wno-unused-result"
+)
 
 pico_add_extra_outputs(PicoDisplay)
 

@@ -2,7 +2,6 @@
 
 #include "picodisplay.h"
 
-
 int main()
 {
     int init_success = init();
