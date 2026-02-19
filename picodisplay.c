@@ -3,15 +3,20 @@
 #include "pico/async_context.h"
 #include "lwip/altcp_tls.h"
 
+#include "secrets/wifi.h"
+
 int init() {
     // stdio
     stdio_init_all();
 
     // wifi
     if (cyw43_arch_init()) {
-        printf("Wi-Fi init failed\n");
+        fprintf(stderr, "Wi-Fi init failed\n");
     }
     cyw43_arch_enable_sta_mode();
+    if (cyw43_arch_wifi_connect_timeout_ms(WIFI_SSID, WIFI_PASSWORD, WIFI_AUTH, 10000)) {
+        fprintf(stderr, "Timed out connecting to network \"%s\"\n", WIFI_SSID);
+    }
     cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, 1);
 }
 
