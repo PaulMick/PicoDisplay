@@ -27,7 +27,6 @@ int init() {
 
     // display utils
     init_display_utils();
-    
 }
 
 int run() {

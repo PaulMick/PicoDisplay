@@ -8,3 +8,11 @@ I developed this project using the Raspberry Pi Pico extension on VSCode to buil
 With the Raspberry Pi Pico extension in VSCode, build the project
 
 Flash the board with the new firmware with `picotool -f load build/PicoDisplay.uf2`
+
+## Inner Workings
+
+### HUB75 Display Driver
+
+
+## Attributions
+Much of the HUB75 pipeline was informed by this amazing repository: [https://github.com/JuPfu/hub75](https://github.com/JuPfu/hub75).
