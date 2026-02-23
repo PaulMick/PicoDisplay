@@ -150,8 +150,6 @@ void init_display_driver() {
 }
 
 void row_finished_handler() {
-    printf("row finished handler\n");
-
     // clear interrupt
     dma_hw->ints0 = 1 << DMA_CHANNEL_ROW_FINISHED;
 
@@ -165,6 +163,6 @@ void row_finished_handler() {
         hub75_pixel_set_shift(pio, sm_pixel, pixel_prog_offset, bitplane);
     }
     oepulse_row = row | (1 << (bitplane + 4));
-    dma_channel_set_write_addr(DMA_CHANNEL_ROW_FINISHED, &row_finished_data, true);
-    dma_channel_set_read_addr(DMA_CHANNEL_PIXEL, frame_buf0[row], true);
+    // dma_channel_set_write_addr(DMA_CHANNEL_ROW_FINISHED, &row_finished_data, true);
+    dma_channel_set_read_addr(DMA_CHANNEL_PIXEL, frame_buf0[row], false);
 }

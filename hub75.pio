@@ -7,10 +7,8 @@
 ; side set bits: lat,oe
 
 .wrap_target
-    ; out pins, 4 [7]     side 0b10 ; deassert oe, output sel
-    ; out x, 28   [7]     side 0b11 ; pulse lat, get oe pulse width
-    out pins, 4 [7]     side 0b00 ; deassert oe, output sel
-    out x, 28   [7]     side 0b01 ; pulse lat, get oe pulse width
+    out pins, 4 [7]     side 0b10 ; deassert oe, output sel
+    out x, 28   [7]     side 0b11 ; pulse lat, get oe pulse width
 pulse_loop:
     jmp x-- pulse_loop  side 0b00 ; assert oe for x+1 cycles
     in x, 32            side 0b00 ; output
@@ -31,7 +29,7 @@ static inline void hub75_row_program_init(PIO pio, uint offset, uint sm, uint se
     sm_config_set_out_pins(&cfg, sel_base_pin, 4); // rgb0 and rgb1 pins
     sm_config_set_sideset_pins(&cfg, lat_oe_base_pin); // lat and oe pins
     sm_config_set_out_shift(&cfg, true, true, 32);
-    sm_config_set_out_shift(&cfg, true, true, 32);
+    sm_config_set_in_shift(&cfg, true, true, 32);
     pio_sm_init(pio, sm, offset, &cfg);
     pio_sm_set_enabled(pio, sm, true);
 }
