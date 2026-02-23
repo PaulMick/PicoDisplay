@@ -7,11 +7,13 @@
 ; side set bits: lat,oe
 
 .wrap_target
-    out pins, 5 [7] side 0b10 ; deassert oe, output sel
-    out x, 27   [7] side 0b11 ; pulse lat, get oe pulse width
+    pull block          side 0b10 ; pull in from tx
+    out pins, 5 [7]     side 0b10 ; deassert oe, output sel
+    out x, 27   [7]     side 0b11 ; pulse lat, get oe pulse width
 pulse_loop:
-    jmp x-- pulse_loop side 0b00 ; assert oe for x+1 cycles
-    in x, 32 side 0b10 ; output 
+    jmp x-- pulse_loop  side 0b00 ; assert oe for x+1 cycles
+    in x, 32            side 0b10 ; output
+    irq wait 0 rel      side 0b10 ; trigger done irq and wait
 .wrap
 
 % c-sdk {
@@ -36,30 +38,43 @@ static inline void hub75_row_program_init(PIO pio, uint offset, uint sm, uint se
 
 .program hub75_pixel
 .side_set 1
-.define BIT_PLANES 10
 
 ; pixel clocking
 
 public entry_point:
 .wrap_target
 public shift0:
-    pull                    side 0
-    in osr, 1               side 0 ; red0 bit
-    out null, BIT_PLANES    side 0 ; skip to next
-    in osr, 1               side 0 ; green0 bit
-    out null, BIT_PLANES    side 0 ; skip to next
-    in osr, 1               side 0 ; blue0 bit
-    out null, 32            side 0 ; skip rest
+    ; pull                    side 0 ; pull in from tx
+    ; in osr, 1               side 0 ; red0 bit
+    ; out null, BIT_PLANES    side 0 ; skip to next
+    ; in osr, 1               side 0 ; green0 bit
+    ; out null, BIT_PLANES    side 0 ; skip to next
+    ; in osr, 1               side 0 ; blue0 bit
+    ; out null, 32            side 0 ; skip rest
+    pull block              side 0
+    out pins, 1             side 0
+    out null, BIT_PLANES    side 0
+    out pins, 1             side 0
+    out null, BIT_PLANES    side 0
+    out pins, 1             side 0
+    out null, 32            side 0
 public shift1:
-    pull                    side 0
-    in osr, 1               side 0 ; red0 bit, clk in rgb0
-    out null, BIT_PLANES    side 0 ; skip to next
-    in osr, 1               side 0 ; green0 bit
-    out null, BIT_PLANES    side 0 ; skip to next
-    in osr, 1               side 0 ; blue0 bit
-    out null, 32 [7]        side 1 ; skip rest, clk edge
-    ; out null, 0 [7]         side 1 ; hold clk
-    mov pins, ::isr         side 0 
+    pull block              side 0
+    out pins, 1             side 0
+    out null, BIT_PLANES    side 0
+    out pins, 1             side 0
+    out null, BIT_PLANES    side 0
+    out pins, 1             side 0
+    out null, 32            side 1
+    ; pull                    side 0
+    ; in osr, 1               side 0 ; red0 bit, clk in rgb0
+    ; out null, BIT_PLANES    side 0 ; skip to next
+    ; in osr, 1               side 0 ; green0 bit
+    ; out null, BIT_PLANES    side 0 ; skip to next
+    ; in osr, 1               side 0 ; blue0 bit
+    ; out null, 32            side 0 ; skip rest
+    ; out pins, 6             side 0 ; output to pins
+    ; out null, 26            side 1 ; dump rest, trig clk
 .wrap
 
 % c-sdk {
