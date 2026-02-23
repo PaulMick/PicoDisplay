@@ -34,7 +34,7 @@
 #define COLS 64
 #define SCAN_LINES 2
 #define ROW_PAIRS ROWS / SCAN_LINES
-#define COLOR_DEPTH 8
+#define COLOR_DEPTH 10
 
 // frame stuff
 uint32_t **frame_buf0;
@@ -94,13 +94,19 @@ void init_display_driver() {
     dma_channel_config_t pixel_channel_cfg = {.ctrl = (
         1 << DMA_CH0_CTRL_TRIG_CHAIN_TO_LSB | // chain to row channel when done
         DREQ_PIO0_TX0 << DMA_CH0_CTRL_TRIG_TREQ_SEL_LSB | // pace transfer rate with PIO0 tx fifo
+        0x1 << DMA_CH0_CTRL_TRIG_INCR_READ_LSB | // increment read location
+        0x0 << DMA_CH0_CTRL_TRIG_INCR_WRITE_LSB | // don't change write location
         0x2 << DMA_CH0_CTRL_TRIG_DATA_SIZE_LSB // word-size transfers (32 bits)
     )};
-    dma_channel_configure(DMA_CHANNEL_PIXEL, &pixel_channel_cfg, &(pio0_hw->txf), frame_buf0[0], COLS, true);
+    dma_channel_configure(DMA_CHANNEL_PIXEL, &pixel_channel_cfg, &(pio0_hw->txf[0]), frame_buf0[0], COLS, true);
+    dma_channel_start(DMA_CHANNEL_PIXEL);
     dma_channel_config_t row_channel_cfg = {.ctrl = (
+        DREQ_PIO0_TX0 << DMA_CH1_CTRL_TRIG_TREQ_SEL_LSB | // pace transfer rate with PIO0 tx fifo
+        0x0 << DMA_CH1_CTRL_TRIG_INCR_WRITE_LSB | // don't change write location
+        0x0 << DMA_CH1_CTRL_TRIG_INCR_READ_LSB | // don't change read location
         0x2 << DMA_CH1_CTRL_TRIG_DATA_SIZE_LSB // word-size transfers (32 bits)
     )};
-    dma_channel_configure(DMA_CHANNEL_ROW, &row_channel_cfg, &(pio0_hw->txf), &oepulse_row, 1, false);
+    dma_channel_configure(DMA_CHANNEL_ROW, &row_channel_cfg, &(pio0_hw->txf[0]), &oepulse_row, 1, false);
     
     // irq
     irq_set_exclusive_handler(PIO0_IRQ_0, row_finished_handler);
@@ -130,5 +136,4 @@ void row_finished_handler() {
     }
     oepulse_row = 1 << bitplane + 5 | row << 0;
     dma_channel_set_read_addr(DMA_CHANNEL_PIXEL, frame_buf0[row], true);
-    
 }

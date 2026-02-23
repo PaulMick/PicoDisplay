@@ -3,6 +3,7 @@
 
 #define DMA_CHANNEL_PIXEL 0
 #define DMA_CHANNEL_ROW 1
+#define DMA_CHANNEL_ROW_FINISHED 2
 
 void init_display_driver();
 
