@@ -12,7 +12,7 @@
 pulse_loop:
     jmp x-- pulse_loop  side 0b00 ; assert oe for x+1 cycles
     in x, 32            side 0b00 ; output
-    push                side 0b00
+    ; push                side 0b00
 .wrap
 
 % c-sdk {
@@ -59,7 +59,6 @@ public shift1:
     out null, BIT_PLANES    side 1 ; skip to next
     in osr, 1               side 1 ; blue0 bit
     out null, 32            side 1 ; skip rest, clk edge
-    ; out null, 8 [7]         side 1 ; hold clk
     mov pins, ::isr         side 1
 .wrap
 

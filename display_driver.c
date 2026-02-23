@@ -133,7 +133,6 @@ void init_display_driver() {
     uint dreq_row_finished = pio_get_dreq(pio, sm_row, false);
     channel_config_set_dreq(&cfg_row_finished, dreq_row_finished);
     channel_config_set_high_priority(&cfg_row_finished, true);
-    channel_config_set_chain_to(&cfg_row_finished, DMA_CHANNEL_PIXEL); // maybe not needed?
     dma_channel_configure(DMA_CHANNEL_ROW_FINISHED, &cfg_row_finished, &row_finished_data, &pio->rxf[sm_row], 1, false);
     // other setup
     dma_channel_set_read_addr(DMA_CHANNEL_DUMMY_PIXEL, dummy_pixel_data, false);
@@ -145,7 +144,6 @@ void init_display_driver() {
     irq_set_enabled(DMA_IRQ_0, true);
 
     // start
-    // dma_channel_set_write_addr(DMA_CHANNEL_ROW_FINISHED, &row_finished_data, true);
     dma_channel_set_read_addr(DMA_CHANNEL_PIXEL, frame_buf0[row], true);
 }
 
@@ -163,6 +161,5 @@ void row_finished_handler() {
         hub75_pixel_set_shift(pio, sm_pixel, pixel_prog_offset, bitplane);
     }
     oepulse_row = row | (1 << (bitplane + 4));
-    // dma_channel_set_write_addr(DMA_CHANNEL_ROW_FINISHED, &row_finished_data, true);
-    dma_channel_set_read_addr(DMA_CHANNEL_PIXEL, frame_buf0[row], false);
+    dma_channel_set_read_addr(DMA_CHANNEL_PIXEL, frame_buf0[row], true);
 }
