@@ -7,8 +7,10 @@
 ; side set bits: lat,oe
 
 .wrap_target
-    out pins, 5 [7]     side 0b10 ; deassert oe, output sel
-    out x, 27   [7]     side 0b11 ; pulse lat, get oe pulse width
+    ; out pins, 4 [7]     side 0b10 ; deassert oe, output sel
+    ; out x, 28   [7]     side 0b11 ; pulse lat, get oe pulse width
+    out pins, 4 [7]     side 0b00 ; deassert oe, output sel
+    out x, 28   [7]     side 0b01 ; pulse lat, get oe pulse width
 pulse_loop:
     jmp x-- pulse_loop  side 0b00 ; assert oe for x+1 cycles
     in x, 32            side 0b00 ; output 
@@ -59,7 +61,8 @@ public shift1:
     in osr, 1               side 1 ; blue0 bit
     out null, 32            side 1 ; skip rest, clk edge
     ; out null, 8 [7]         side 1 ; hold clk
-    mov pins, ::isr         side 1 
+    mov pins, ::isr         side 1
+    push                    side 1
 .wrap
 
 % c-sdk {

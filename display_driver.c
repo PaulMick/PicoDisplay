@@ -54,6 +54,10 @@ uint row;
 uint bitplane;
 uint32_t oepulse_row;
 
+// misc
+uint32_t dummy_pixel_data[8] = {0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0};
+uint32_t row_finished_data = 0;
+
 void init_display_driver() {
     // allocate buffer space
     frame_buf0 = calloc(ROWS, sizeof(uint32_t*));
@@ -91,40 +95,66 @@ void init_display_driver() {
     hub75_row_program_init(pio, row_prog_offset, sm_row, SEL_BASE, LAT_OE_BASE);
 
     // dma
-    dma_channel_config_t pixel_channel_cfg = {.ctrl = (
-        1 << DMA_CH0_CTRL_TRIG_CHAIN_TO_LSB | // chain to row channel when done
-        DREQ_PIO0_TX0 << DMA_CH0_CTRL_TRIG_TREQ_SEL_LSB | // pace transfer rate with PIO0 tx fifo
-        0x1 << DMA_CH0_CTRL_TRIG_INCR_READ_LSB | // increment read location
-        0x0 << DMA_CH0_CTRL_TRIG_INCR_WRITE_LSB | // don't change write location
-        0x2 << DMA_CH0_CTRL_TRIG_DATA_SIZE_LSB // word-size transfers (32 bits)
-    )};
-    dma_channel_configure(DMA_CHANNEL_PIXEL, &pixel_channel_cfg, &(pio0_hw->txf[0]), frame_buf0[0], COLS, true);
-    dma_channel_start(DMA_CHANNEL_PIXEL);
-    dma_channel_config_t row_channel_cfg = {.ctrl = (
-        DREQ_PIO0_TX0 << DMA_CH1_CTRL_TRIG_TREQ_SEL_LSB | // pace transfer rate with PIO0 tx fifo
-        0x0 << DMA_CH1_CTRL_TRIG_INCR_WRITE_LSB | // don't change write location
-        0x0 << DMA_CH1_CTRL_TRIG_INCR_READ_LSB | // don't change read location
-        0x2 << DMA_CH1_CTRL_TRIG_DATA_SIZE_LSB // word-size transfers (32 bits)
-    )};
-    dma_channel_configure(DMA_CHANNEL_ROW, &row_channel_cfg, &(pio0_hw->txf[0]), &oepulse_row, 1, false);
-    
-    // irq
-    irq_set_exclusive_handler(PIO0_IRQ_0, row_finished_handler);
-    irq_set_enabled(PIO0_IRQ_0, true);
-    pio_set_irq0_source_enabled(pio, pis_interrupt0, true);
-}
+    // pixel
+    dma_channel_config cfg_pixel = dma_channel_get_default_config(DMA_CHANNEL_PIXEL);
+    channel_config_set_transfer_data_size(&cfg_pixel, DMA_SIZE_32);
+    channel_config_set_read_increment(&cfg_pixel, true);
+    channel_config_set_write_increment(&cfg_pixel, false);
+    uint dreq_pixel = pio_get_dreq(pio, sm_pixel, true);
+    channel_config_set_dreq(&cfg_pixel, dreq_pixel);
+    channel_config_set_high_priority(&cfg_pixel, true);
+    channel_config_set_chain_to(&cfg_pixel, DMA_CHANNEL_DUMMY_PIXEL);
+    dma_channel_configure(DMA_CHANNEL_PIXEL, &cfg_pixel, &pio->txf[sm_pixel], NULL, COLS, false);
+    // dummy pixel
+    dma_channel_config cfg_dummy_pixel = dma_channel_get_default_config(DMA_CHANNEL_DUMMY_PIXEL);
+    channel_config_set_transfer_data_size(&cfg_dummy_pixel, DMA_SIZE_32);
+    channel_config_set_read_increment(&cfg_dummy_pixel, false);
+    channel_config_set_write_increment(&cfg_dummy_pixel, false);
+    uint dreq_dummy_pixel = pio_get_dreq(pio, sm_pixel, true);
+    channel_config_set_dreq(&cfg_dummy_pixel, dreq_dummy_pixel);
+    channel_config_set_high_priority(&cfg_dummy_pixel, true);
+    channel_config_set_chain_to(&cfg_dummy_pixel, DMA_CHANNEL_ROW);
+    dma_channel_configure(DMA_CHANNEL_DUMMY_PIXEL, &cfg_dummy_pixel, &pio->txf[sm_pixel], NULL, 8, false);
+    // row
+    dma_channel_config cfg_row = dma_channel_get_default_config(DMA_CHANNEL_ROW);
+    channel_config_set_transfer_data_size(&cfg_row, DMA_SIZE_32);
+    channel_config_set_read_increment(&cfg_row, false); // maybe different
+    channel_config_set_write_increment(&cfg_row, false);
+    uint dreq_row = pio_get_dreq(pio, sm_row, true);
+    channel_config_set_dreq(&cfg_row, dreq_row);
+    channel_config_set_high_priority(&cfg_row, true);
+    channel_config_set_chain_to(&cfg_row, DMA_CHANNEL_ROW_FINISHED); // ROW or ROW_FINISHED?
+    dma_channel_configure(DMA_CHANNEL_ROW, &cfg_row, &pio->txf[sm_row], NULL, 1, false);
+    // row finished
+    dma_channel_config cfg_row_finished = dma_channel_get_default_config(DMA_CHANNEL_ROW_FINISHED);
+    channel_config_set_transfer_data_size(&cfg_row_finished, DMA_SIZE_32);
+    channel_config_set_read_increment(&cfg_row_finished, false);
+    channel_config_set_write_increment(&cfg_row_finished, false);
+    uint dreq_row_finished = pio_get_dreq(pio, sm_row, false);
+    channel_config_set_dreq(&cfg_row_finished, dreq_row_finished);
+    channel_config_set_high_priority(&cfg_row_finished, true);
+    channel_config_set_chain_to(&cfg_row_finished, DMA_CHANNEL_PIXEL); // maybe not needed?
+    dma_channel_configure(DMA_CHANNEL_ROW_FINISHED, &cfg_row_finished, &row_finished_data, &pio->rxf[sm_row], 1, false);
+    // other setup
+    dma_channel_set_read_addr(DMA_CHANNEL_DUMMY_PIXEL, dummy_pixel_data, false);
+    dma_channel_set_read_addr(DMA_CHANNEL_ROW, &oepulse_row, false);
 
-void pixel_finished_handler() {
-    printf("pixel finished handlers\n");
+    // dma irq
+    irq_set_exclusive_handler(DMA_IRQ_0, row_finished_handler);
+    dma_channel_set_irq0_enabled(DMA_CHANNEL_ROW_FINISHED, true);
+    irq_set_enabled(DMA_IRQ_0, true);
+
+    // start
+    dma_channel_set_write_addr(DMA_CHANNEL_ROW_FINISHED, &row_finished_data, true);
+    dma_channel_set_read_addr(DMA_CHANNEL_PIXEL, frame_buf0[row], false);
 }
 
 void row_finished_handler() {
     printf("row finished handler\n");
 
-    // acknowledge interrupt
-    pio_interrupt_clear(pio, 0);
+    // clear interrupt
+    dma_hw->ints0 = 1 << DMA_CHANNEL_ROW_FINISHED;
 
-    // increment row
     row ++;
     if (row == ROW_PAIRS) {
         row = 0;
@@ -134,6 +164,7 @@ void row_finished_handler() {
         }
         hub75_pixel_set_shift(pio, sm_pixel, pixel_prog_offset, bitplane);
     }
-    oepulse_row = 1 << bitplane + 5 | row << 0;
+    oepulse_row = row | (1 << (bitplane + 4));
+    dma_channel_set_write_addr(DMA_CHANNEL_ROW_FINISHED, &row_finished_data, true);
     dma_channel_set_read_addr(DMA_CHANNEL_PIXEL, frame_buf0[row], true);
 }
