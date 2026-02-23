@@ -145,8 +145,8 @@ void init_display_driver() {
     irq_set_enabled(DMA_IRQ_0, true);
 
     // start
-    dma_channel_set_write_addr(DMA_CHANNEL_ROW_FINISHED, &row_finished_data, true);
-    dma_channel_set_read_addr(DMA_CHANNEL_PIXEL, frame_buf0[row], false);
+    // dma_channel_set_write_addr(DMA_CHANNEL_ROW_FINISHED, &row_finished_data, true);
+    dma_channel_set_read_addr(DMA_CHANNEL_PIXEL, frame_buf0[row], true);
 }
 
 void row_finished_handler() {

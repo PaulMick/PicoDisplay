@@ -13,7 +13,8 @@
     out x, 28   [7]     side 0b01 ; pulse lat, get oe pulse width
 pulse_loop:
     jmp x-- pulse_loop  side 0b00 ; assert oe for x+1 cycles
-    in x, 32            side 0b00 ; output 
+    in x, 32            side 0b00 ; output
+    push                side 0b00
 .wrap
 
 % c-sdk {
@@ -62,7 +63,6 @@ public shift1:
     out null, 32            side 1 ; skip rest, clk edge
     ; out null, 8 [7]         side 1 ; hold clk
     mov pins, ::isr         side 1
-    push                    side 1
 .wrap
 
 % c-sdk {
