@@ -37,8 +37,8 @@
 #define COLOR_DEPTH 10
 
 // frame stuff
-uint32_t **frame_buf0;
-uint32_t **frame_buf1;
+uint16_t **frame_buf0;
+uint16_t **frame_buf1;
 int done_writing;
 int done_reading;
 int read_buf_num;
@@ -60,18 +60,18 @@ uint32_t row_finished_data = 0;
 
 void init_display_driver() {
     // allocate buffer space
-    frame_buf0 = calloc(ROWS, sizeof(uint32_t*));
+    frame_buf0 = calloc(ROWS, sizeof(uint16_t*));
     for (int i = 0; i < ROWS; i ++) {
-        frame_buf0[i] = calloc(COLS, sizeof(uint32_t));
+        frame_buf0[i] = calloc(COLS, sizeof(uint16_t));
     }
-    frame_buf1 = calloc(ROWS, sizeof(uint32_t*));
+    frame_buf1 = calloc(ROWS, sizeof(uint16_t*));
     for (int i = 0; i < ROWS; i ++) {
-        frame_buf1[i] = calloc(COLS, sizeof(uint32_t));
+        frame_buf1[i] = calloc(COLS, sizeof(uint16_t));
     }
 
     for (int i = 0; i < ROWS; i ++) {
         for (int j = 0; j < COLS; j ++) {
-            frame_buf0[i][j] = 0xffffffff;
+            frame_buf0[i][j] = 0xffff;
         }
     }
 
@@ -83,85 +83,41 @@ void init_display_driver() {
     row = 0;
 
     // pio
-    pio = pio0;
-    sm_pixel = 0;
-    sm_row = 1;
-    pixel_prog_offset = pio_add_program(pio, &hub75_pixel_program);
-    row_prog_offset = pio_add_program(pio, &hub75_row_program);
-    row = 0;
-    bitplane = 0;
-    oepulse_row = 0;
-    hub75_pixel_program_init(pio, pixel_prog_offset, sm_pixel, RGB_BASE, CLK);
-    hub75_row_program_init(pio, row_prog_offset, sm_row, SEL_BASE, LAT_OE_BASE);
+    PIO pio = pio0;
+    uint sm_data = 0;
+    uint sm_row = 1;
+    uint data_prog_offs = pio_add_program(pio, &hub75_data_rgb888_program);
+    uint row_prog_offs = pio_add_program(pio, &hub75_row_program);
+    hub75_data_rgb888_program_init(pio, sm_data, data_prog_offs, RGB_BASE, CLK);
+    hub75_row_program_init(pio, sm_row, row_prog_offs, SEL_BASE, 4, LAT);
 
-    // dma
-    // pixel
-    dma_channel_config cfg_pixel = dma_channel_get_default_config(DMA_CHANNEL_PIXEL);
-    channel_config_set_transfer_data_size(&cfg_pixel, DMA_SIZE_32);
-    channel_config_set_read_increment(&cfg_pixel, true);
-    channel_config_set_write_increment(&cfg_pixel, false);
-    uint dreq_pixel = pio_get_dreq(pio, sm_pixel, true);
-    channel_config_set_dreq(&cfg_pixel, dreq_pixel);
-    channel_config_set_chain_to(&cfg_pixel, DMA_CHANNEL_DUMMY_PIXEL);
-    dma_channel_configure(DMA_CHANNEL_PIXEL, &cfg_pixel, &pio->txf[sm_pixel], NULL, COLS, false);
-    // dummy pixel
-    dma_channel_config cfg_dummy_pixel = dma_channel_get_default_config(DMA_CHANNEL_DUMMY_PIXEL);
-    channel_config_set_transfer_data_size(&cfg_dummy_pixel, DMA_SIZE_32);
-    channel_config_set_read_increment(&cfg_dummy_pixel, false);
-    channel_config_set_write_increment(&cfg_dummy_pixel, false);
-    uint dreq_dummy_pixel = pio_get_dreq(pio, sm_pixel, true);
-    channel_config_set_dreq(&cfg_dummy_pixel, dreq_dummy_pixel);
-    channel_config_set_chain_to(&cfg_dummy_pixel, DMA_CHANNEL_ROW);
-    dma_channel_configure(DMA_CHANNEL_DUMMY_PIXEL, &cfg_dummy_pixel, &pio->txf[sm_pixel], NULL, 8, false);
-    // row
-    dma_channel_config cfg_row = dma_channel_get_default_config(DMA_CHANNEL_ROW);
-    channel_config_set_transfer_data_size(&cfg_row, DMA_SIZE_32);
-    channel_config_set_read_increment(&cfg_row, false);
-    channel_config_set_write_increment(&cfg_row, false);
-    uint dreq_row = pio_get_dreq(pio, sm_row, true);
-    channel_config_set_dreq(&cfg_row, dreq_row);
-    channel_config_set_chain_to(&cfg_row, DMA_CHANNEL_ROW_FINISHED);
-    dma_channel_configure(DMA_CHANNEL_ROW, &cfg_row, &pio->txf[sm_row], NULL, 1, false);
-    // row finished
-    dma_channel_config cfg_row_finished = dma_channel_get_default_config(DMA_CHANNEL_ROW_FINISHED);
-    channel_config_set_transfer_data_size(&cfg_row_finished, DMA_SIZE_32);
-    channel_config_set_read_increment(&cfg_row_finished, false);
-    channel_config_set_write_increment(&cfg_row_finished, false);
-    uint dreq_row_finished = pio_get_dreq(pio, sm_row, false);
-    channel_config_set_dreq(&cfg_row_finished, dreq_row_finished);
-    dma_channel_configure(DMA_CHANNEL_ROW_FINISHED, &cfg_row_finished, &row_finished_data, &pio->rxf[sm_row], 1, false);
-    // other setup
-    dma_channel_set_read_addr(DMA_CHANNEL_DUMMY_PIXEL, dummy_pixel_data, false);
-    dma_channel_set_read_addr(DMA_CHANNEL_ROW, &oepulse_row, false);
+    static uint32_t gc_row[2][COLS];
 
-    // dma irq
-    irq_set_exclusive_handler(DMA_IRQ_0, row_finished_handler);
-    dma_channel_set_irq0_enabled(DMA_CHANNEL_ROW_FINISHED, true);
-    irq_set_enabled(DMA_IRQ_0, true);
+    while (1) {
+        for (int rowsel = 0; rowsel < ROW_PAIRS; ++rowsel) {
+            for (int x = 0; x < COLS; ++x) {
+                // gc_row[0][x] = gamma_correct_565_888(frame_buf0[x][rowsel]);
+                // gc_row[1][x] = gamma_correct_565_888(frame_buf0[x][ROW_PAIRS + rowsel]);
+                gc_row[0][x] = 0x00ff00ff; // XRGB
+                gc_row[1][x] = 0xffffffff;
+            }
+            for (int bit = 0; bit < 8; ++bit) {
+                hub75_data_rgb888_set_shift(pio, sm_data, data_prog_offs, bit);
+                for (int x = 0; x < COLS; ++x) {
+                    pio_sm_put_blocking(pio, sm_data, gc_row[0][x]);
+                    pio_sm_put_blocking(pio, sm_data, gc_row[1][x]);
+                }
+                // Dummy pixel per lane
+                pio_sm_put_blocking(pio, sm_data, 0);
+                pio_sm_put_blocking(pio, sm_data, 0);
+                // SM is finished when it stalls on empty TX FIFO
+                hub75_wait_tx_stall(pio, sm_data);
+                // Also check that previous OEn pulse is finished, else things can get out of sequence
+                hub75_wait_tx_stall(pio, sm_row);
 
-    // start
-    dma_channel_set_read_addr(DMA_CHANNEL_PIXEL, frame_buf0[row], true);
-}
-
-void row_finished_handler() {
-    // clear interrupt
-    dma_hw->ints0 = 1 << DMA_CHANNEL_ROW_FINISHED;
-
-    row ++;
-    if (row == ROW_PAIRS) {
-        row = 0;
-        bitplane ++;
-        if (bitplane == COLOR_DEPTH) {
-            bitplane = 0;
+                // Latch row data, pulse output enable for new row.
+                pio_sm_put_blocking(pio, sm_row, rowsel | (100u * (1u << bit) << 5));
+            }
         }
-        hub75_pixel_set_shift(pio, sm_pixel, pixel_prog_offset, bitplane);
     }
-    oepulse_row = row | (1 << (bitplane + 4));
-
-    dma_channel_set_read_addr(DMA_CHANNEL_PIXEL, frame_buf0[row], false);
-    dma_channel_set_transfer_count(DMA_CHANNEL_ROW_FINISHED, 1, false);
-    dma_channel_set_transfer_count(DMA_CHANNEL_ROW, 1, false);
-    dma_channel_set_transfer_count(DMA_CHANNEL_DUMMY_PIXEL, 8, false);
-    dma_channel_set_transfer_count(DMA_CHANNEL_PIXEL, COLS, false);
-    dma_channel_start(DMA_CHANNEL_PIXEL);
 }

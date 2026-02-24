@@ -8,6 +8,4 @@
 
 void init_display_driver();
 
-void row_finished_handler();
-
 #endif
