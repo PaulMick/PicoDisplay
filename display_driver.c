@@ -38,12 +38,15 @@
 #define COLOR_DEPTH 10
 
 // frame stuff
-uint16_t **frame_buf0;
-uint16_t **frame_buf1;
+uint32_t **frame_buf0;
+uint32_t **frame_buf1;
+uint32_t **tmp;
+uint32_t ***frame_buf_write;
+uint32_t ***frame_buf_read;
 int done_writing;
 int done_reading;
-int read_buf_num;
-int write_buf_num;
+int *done_writing_ptr = &done_writing;
+int *done_reading_ptr = &done_reading;
 static uint32_t gc_row[2][COLS];
 
 // pio stuff
@@ -53,28 +56,33 @@ uint sm_row;
 uint data_prog_offs;
 uint row_prog_offs;
 
-void init_display_driver() {
+DisplayHandle init_display_driver() {
     // allocate buffer space
-    frame_buf0 = calloc(ROWS, sizeof(uint16_t*));
+    frame_buf0 = calloc(ROWS, sizeof(uint32_t*));
     for (int i = 0; i < ROWS; i ++) {
-        frame_buf0[i] = calloc(COLS, sizeof(uint16_t));
+        frame_buf0[i] = calloc(COLS, sizeof(uint32_t));
     }
-    frame_buf1 = calloc(ROWS, sizeof(uint16_t*));
+    frame_buf1 = calloc(ROWS, sizeof(uint32_t*));
     for (int i = 0; i < ROWS; i ++) {
-        frame_buf1[i] = calloc(COLS, sizeof(uint16_t));
+        frame_buf1[i] = calloc(COLS, sizeof(uint32_t));
     }
 
-    // for (int i = 0; i < ROWS; i ++) {
-    //     for (int j = 0; j < COLS; j ++) {
-    //         frame_buf0[i][j] = 0xffff;
-    //     }
-    // }
+    for (int i = 0; i < ROWS; i ++) {
+        for (int j = 0; j < COLS; j ++) {
+            frame_buf0[i][j] = 0x000000ff;
+        }
+    }
+    for (int i = 0; i < ROWS; i ++) {
+        for (int j = 0; j < COLS; j ++) {
+            frame_buf0[i][j] = 0x0000ff00;
+        }
+    }
 
     // initial control values
+    frame_buf_read = &frame_buf0;
+    frame_buf_write = &frame_buf1;
     done_reading = 0;
     done_writing = 0;
-    read_buf_num = 0;
-    write_buf_num = 1;
 
     // pio
     pio = pio0;
@@ -86,20 +94,29 @@ void init_display_driver() {
     hub75_row_program_init(pio, sm_row, row_prog_offs, SEL_BASE, 4, LAT);
 
     // start display driver on core 1, leaving core 0 for other tasks
-    multicore_launch_core1(start_refresh);    
+    multicore_launch_core1(start_refresh);
+
+    // create and return display handle
+    DisplayHandle dh = {
+        .frame_buf_write = frame_buf_write,
+        .update_frame = update_frame
+    };
+    return dh;
 }
 
+// continually refresh the display
 void start_refresh() {
     while (1) {
-        uint8_t i = 0;
+        // if new frame is ready, wait until switched
+        while (done_writing) {
+            done_reading = 1;
+        }
+        // display
         for (int rowsel = 0; rowsel < ROW_PAIRS; ++rowsel) {
-            i ++;
-            uint8_t j = 0;
             for (int x = 0; x < COLS; ++x) {
-                // gc_row[0][x] = 0x00ff00ff; // XRGB
-                gc_row[0][x] = (i << 16) | (j << 8) | j;
-                gc_row[1][x] = ((16 - i) << 16) | j;
-                j ++;
+                // set pixels
+                gc_row[0][x] = (*frame_buf_read)[rowsel][x];
+                gc_row[1][x] = (*frame_buf_read)[rowsel + ROW_PAIRS][x];
             }
             for (int bit = 0; bit < 8; ++bit) {
                 hub75_data_rgb888_set_shift(pio, sm_data, data_prog_offs, bit);
@@ -107,21 +124,30 @@ void start_refresh() {
                     pio_sm_put_blocking(pio, sm_data, gc_row[0][x]);
                     pio_sm_put_blocking(pio, sm_data, gc_row[1][x]);
                 }
-                // Dummy pixel per lane
+                // dummy pixel per lane
                 pio_sm_put_blocking(pio, sm_data, 0);
                 pio_sm_put_blocking(pio, sm_data, 0);
-                // SM is finished when it stalls on empty TX FIFO
+                // sm is finished when it stalls on empty tx fifo
                 hub75_wait_tx_stall(pio, sm_data);
-                // Also check that previous OEn pulse is finished, else things can get out of sequence
+                // also check that previous oen pulse is finished, else things can get out of sequence
                 hub75_wait_tx_stall(pio, sm_row);
 
-                // Latch row data, pulse output enable for new row.
+                // latch row data, pulse output enable for new row.
                 pio_sm_put_blocking(pio, sm_row, rowsel | (100u * (1u << bit) << 5));
             }
         }
     }
 }
 
+// swap new frame into read buffer to be displayed
 void update_frame() {
-    
+    done_writing = 1;
+    // wait until frame is done being displayed
+    while (!done_reading) {}
+    // switch
+    tmp = *frame_buf_read;
+    *frame_buf_read = *frame_buf_write;
+    *frame_buf_write = tmp;
+    done_writing = 0;
+    done_reading = 0;
 }

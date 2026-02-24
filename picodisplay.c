@@ -26,10 +26,10 @@ int init() {
     cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, 1);
 
     // display driver
-    init_display_driver();
+    DisplayHandle dh = init_display_driver();
 
     // display utils
-    init_display_utils();
+    init_display_utils(dh);
 }
 
 int run() {
@@ -53,6 +53,7 @@ int run() {
         // uint32_t pixel_instr = pio0->instr_mem[pixel_pc];
         // printf("%ld\n");
         printf("hello\n");
+        test();
         sleep_ms(1000);
     }
 }

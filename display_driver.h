@@ -6,7 +6,12 @@
 #define DMA_CHANNEL_ROW 2
 #define DMA_CHANNEL_ROW_FINISHED 3
 
-void init_display_driver();
+typedef struct {
+    uint32_t ***frame_buf_write;
+    void (*update_frame)(void);
+} DisplayHandle;
+
+DisplayHandle init_display_driver();
 
 void start_refresh();
 
