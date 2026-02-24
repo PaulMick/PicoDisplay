@@ -75,6 +75,7 @@ target_link_libraries(PicoDisplay
     pico_cyw43_arch_lwip_threadsafe_background
     lwip_http_util
     hardware_pio
+    pico_multicore
 )
 set_source_files_properties(
     ${PICO_LWIP_PATH}/src/apps/altcp_tls/altcp_tls_mbedtls.c
