@@ -7,12 +7,15 @@
 ; side set bits: lat,oe
 
 .wrap_target
-    out pins, 4 [7]     side 0b10 ; deassert oe, output sel
-    out x, 28   [7]     side 0b11 ; pulse lat, get oe pulse width
+    pull                side 0b00
+    ; out pins, 4 [7]     side 0b10 ; deassert oe, output sel
+    ; out x, 28   [7]     side 0b11 ; pulse lat, get oe pulse width
+    out pins, 4 [7]     side 0b00 ; deassert oe, output sel
+    out x, 28   [7]     side 0b01 ; pulse lat, get oe pulse width
 pulse_loop:
     jmp x-- pulse_loop  side 0b00 ; assert oe for x+1 cycles
     in x, 32            side 0b00 ; output
-    ; push                side 0b00
+    push                side 0b00
 .wrap
 
 % c-sdk {
@@ -28,8 +31,8 @@ static inline void hub75_row_program_init(PIO pio, uint offset, uint sm, uint se
     pio_sm_config cfg = hub75_row_program_get_default_config(offset);
     sm_config_set_out_pins(&cfg, sel_base_pin, 4); // rgb0 and rgb1 pins
     sm_config_set_sideset_pins(&cfg, lat_oe_base_pin); // lat and oe pins
-    sm_config_set_out_shift(&cfg, true, true, 32);
-    sm_config_set_in_shift(&cfg, true, true, 32);
+    sm_config_set_out_shift(&cfg, true, false, 32);
+    sm_config_set_in_shift(&cfg, false, false, 32);
     pio_sm_init(pio, sm, offset, &cfg);
     pio_sm_set_enabled(pio, sm, true);
 }
@@ -59,6 +62,7 @@ public shift1:
     out null, BIT_PLANES    side 1 ; skip to next
     in osr, 1               side 1 ; blue0 bit
     out null, 32            side 1 ; skip rest, clk edge
+    in null, 26             side 1 ; just added???
     mov pins, ::isr         side 1
 .wrap
 
@@ -74,21 +78,24 @@ static inline void hub75_pixel_program_init(PIO pio, uint offset, uint sm, uint 
     pio_sm_config cfg = hub75_pixel_program_get_default_config(offset);
     sm_config_set_out_pins(&cfg, rgb_base_pin, 6);
     sm_config_set_sideset_pins(&cfg, clk_pin);
-    sm_config_set_out_shift(&cfg, true, true, 32);
+    sm_config_set_out_shift(&cfg, true, false, 32);
     sm_config_set_in_shift(&cfg, false, false, 32);
     sm_config_set_fifo_join(&cfg, PIO_FIFO_JOIN_TX);
     pio_sm_init(pio, sm, offset, &cfg);
+    pio_sm_exec(pio, sm, offset + hub75_pixel_offset_entry_point); // just added
     pio_sm_set_enabled(pio, sm, true);
 }
 
 static inline void hub75_pixel_set_shift(PIO pio, uint sm, uint offset, uint shift_amount) {
+    
     uint16_t instr;
     if (shift_amount == 0) {
-        instr = pio_encode_pull(false, true);
+        instr = pio_encode_pull(false, true); // (false, true) or (false, false)?
     } else {
         instr = pio_encode_out(pio_null, shift_amount);
     }
     pio->instr_mem[offset + hub75_pixel_offset_shift0] = instr;
     pio->instr_mem[offset + hub75_pixel_offset_shift1] = instr;
+    
 }
 %}
