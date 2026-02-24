@@ -74,7 +74,7 @@ DisplayHandle init_display_driver() {
     }
     for (int i = 0; i < ROWS; i ++) {
         for (int j = 0; j < COLS; j ++) {
-            frame_buf0[i][j] = 0x0000ff00;
+            frame_buf1[i][j] = 0x0000ff00;
         }
     }
 
@@ -99,17 +99,29 @@ DisplayHandle init_display_driver() {
     // create and return display handle
     DisplayHandle dh = {
         .frame_buf_write = frame_buf_write,
-        .update_frame = update_frame
-    };
+        .update_frame = update_frame};
     return dh;
+
+    sleep_ms(1000);
+
+    for (int i = 0; i < ROWS; i ++) {
+        for (int j = 0; j < COLS; j ++) {
+            frame_buf0[i][j] = 0x00ff0000;
+        }
+    }
 }
 
 // continually refresh the display
 void start_refresh() {
     while (1) {
         // if new frame is ready, wait until switched
-        while (done_writing) {
-            done_reading = 1;
+        if (multicore_fifo_rvalid()) {
+            uint32_t cmd = multicore_fifo_pop_blocking();
+            if (cmd == SWAP) {
+                tmp = *frame_buf_read;
+                *frame_buf_read = *frame_buf_write;
+                *frame_buf_write = tmp;
+            }
         }
         // display
         for (int rowsel = 0; rowsel < ROW_PAIRS; ++rowsel) {
@@ -141,13 +153,5 @@ void start_refresh() {
 
 // swap new frame into read buffer to be displayed
 void update_frame() {
-    done_writing = 1;
-    // wait until frame is done being displayed
-    while (!done_reading) {}
-    // switch
-    tmp = *frame_buf_read;
-    *frame_buf_read = *frame_buf_write;
-    *frame_buf_write = tmp;
-    done_writing = 0;
-    done_reading = 0;
+    multicore_fifo_push_blocking(SWAP);
 }
