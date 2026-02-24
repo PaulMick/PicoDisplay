@@ -8,4 +8,8 @@
 
 void init_display_driver();
 
+void start_refresh();
+
+void update_frame();
+
 #endif

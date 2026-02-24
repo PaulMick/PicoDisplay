@@ -5,6 +5,7 @@
 #include "hardware/gpio.h"
 #include "hardware/dma.h"
 #include "hardware/pio.h"
+#include "pico/multicore.h"
 
 // assembled program
 #include "hub75.pio.h"
@@ -43,20 +44,14 @@ int done_writing;
 int done_reading;
 int read_buf_num;
 int write_buf_num;
+static uint32_t gc_row[2][COLS];
 
 // pio stuff
 PIO pio;
-uint sm_pixel;
+uint sm_data;
 uint sm_row;
-uint pixel_prog_offset;
-uint row_prog_offset;
-uint row;
-uint bitplane;
-uint32_t oepulse_row;
-
-// misc
-uint32_t dummy_pixel_data[8] = {0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0};
-uint32_t row_finished_data = 0;
+uint data_prog_offs;
+uint row_prog_offs;
 
 void init_display_driver() {
     // allocate buffer space
@@ -69,37 +64,42 @@ void init_display_driver() {
         frame_buf1[i] = calloc(COLS, sizeof(uint16_t));
     }
 
-    for (int i = 0; i < ROWS; i ++) {
-        for (int j = 0; j < COLS; j ++) {
-            frame_buf0[i][j] = 0xffff;
-        }
-    }
+    // for (int i = 0; i < ROWS; i ++) {
+    //     for (int j = 0; j < COLS; j ++) {
+    //         frame_buf0[i][j] = 0xffff;
+    //     }
+    // }
 
     // initial control values
     done_reading = 0;
     done_writing = 0;
     read_buf_num = 0;
     write_buf_num = 1;
-    row = 0;
 
     // pio
-    PIO pio = pio0;
-    uint sm_data = 0;
-    uint sm_row = 1;
-    uint data_prog_offs = pio_add_program(pio, &hub75_data_rgb888_program);
-    uint row_prog_offs = pio_add_program(pio, &hub75_row_program);
+    pio = pio0;
+    sm_data = 0;
+    sm_row = 1;
+    data_prog_offs = pio_add_program(pio, &hub75_data_rgb888_program);
+    row_prog_offs = pio_add_program(pio, &hub75_row_program);
     hub75_data_rgb888_program_init(pio, sm_data, data_prog_offs, RGB_BASE, CLK);
     hub75_row_program_init(pio, sm_row, row_prog_offs, SEL_BASE, 4, LAT);
 
-    static uint32_t gc_row[2][COLS];
+    // start display driver on core 1, leaving core 0 for other tasks
+    multicore_launch_core1(start_refresh);    
+}
 
+void start_refresh() {
     while (1) {
+        uint8_t i = 0;
         for (int rowsel = 0; rowsel < ROW_PAIRS; ++rowsel) {
+            i ++;
+            uint8_t j = 0;
             for (int x = 0; x < COLS; ++x) {
-                // gc_row[0][x] = gamma_correct_565_888(frame_buf0[x][rowsel]);
-                // gc_row[1][x] = gamma_correct_565_888(frame_buf0[x][ROW_PAIRS + rowsel]);
-                gc_row[0][x] = 0x00ff00ff; // XRGB
-                gc_row[1][x] = 0xffffffff;
+                // gc_row[0][x] = 0x00ff00ff; // XRGB
+                gc_row[0][x] = (i << 16) | (j << 8) | j;
+                gc_row[1][x] = ((16 - i) << 16) | j;
+                j ++;
             }
             for (int bit = 0; bit < 8; ++bit) {
                 hub75_data_rgb888_set_shift(pio, sm_data, data_prog_offs, bit);
@@ -120,4 +120,8 @@ void init_display_driver() {
             }
         }
     }
+}
+
+void update_frame() {
+    
 }
