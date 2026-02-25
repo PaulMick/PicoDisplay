@@ -33,8 +33,7 @@ int init() {
 int run() {
     uint frame_count = 0;
     while (1) {
-        printf("frame\n");
-        draw_line(1, frame_count, RIGHT, 5, 255, 255, 0);
+        draw_rect(1, 1, 10, 20, 2, 255, 255, 0);
 
         update_frame();
         frame_count ++;
