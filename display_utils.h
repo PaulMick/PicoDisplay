@@ -5,6 +5,8 @@
 
 void init_display_utils(DisplayHandle dh);
 
-void test();
+uint32_t rgb_encode(uint8_t r, uint8_t g, uint8_t b);
+
+void draw_pixel(int x, int y, uint8_t r, uint8_t g, uint8_t b);
 
 #endif

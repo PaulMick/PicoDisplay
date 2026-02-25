@@ -3,6 +3,9 @@
 
 #define SWAP 67
 
+#define ROWS 32
+#define COLS 64
+
 typedef struct {
     uint32_t ***frame_buf_write;
     void (*update_frame)(void);

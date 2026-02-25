@@ -33,9 +33,11 @@ int init() {
 }
 
 int run() {
+    uint frame_count = 0;
     while (1) {
-        printf("hello\n");
-        test();
-        sleep_ms(1000);
+        printf("frame\n");
+        draw_pixel(0, 0, 0, 0, 0);
+        frame_count ++;
+        sleep_ms(10);
     }
 }
