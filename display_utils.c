@@ -50,6 +50,16 @@ void fill_frame(uint8_t r, uint8_t g, uint8_t b) {
     }
 }
 
+// draw rect with optional edge thickness (-1 for filled) from point, width, and height
+// void draw_rect(int x, int y, int width, int height, int thickness, uint8_t r, uint8_t g, uint8_t b) {
+//     uint32_t xbgr = rgb_encode(r, g, b);
+//     if (thickness == -1) {
+//         for (int i = 0; i < width,)
+//     } else {
+
+//     }
+// }
+
 // draw pixel-wide line from point, axis, and length
 void draw_line(int x, int y, line_dir_t dir, int len, uint8_t r, uint8_t g, uint8_t b) {
     uint32_t xbgr = rgb_encode(r, g, b);
