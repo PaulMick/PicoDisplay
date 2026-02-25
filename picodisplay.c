@@ -5,11 +5,9 @@
 
 #include "secrets/wifi.h"
 
+#include "gen_utils.h"
 #include "display_driver.h"
 #include "display_utils.h"
-
-// debugging
-#include "hardware/pio.h"
 
 int init() {
     // stdio
@@ -36,8 +34,10 @@ int run() {
     uint frame_count = 0;
     while (1) {
         printf("frame\n");
-        draw_pixel(0, 0, 0, 0, 0);
+        draw_line(1, 2, RIGHT, 5, 255, 255, 0);
+
+        update_frame();
         frame_count ++;
-        sleep_ms(10);
+        sleep_ms(1000);
     }
 }

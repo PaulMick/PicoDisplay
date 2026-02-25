@@ -67,17 +67,6 @@ DisplayHandle init_display_driver() {
         frame_buf1[i] = calloc(COLS, sizeof(uint32_t));
     }
 
-    for (int i = 0; i < ROWS; i ++) {
-        for (int j = 0; j < COLS; j ++) {
-            frame_buf0[i][j] = 0x000000ff;
-        }
-    }
-    for (int i = 0; i < ROWS; i ++) {
-        for (int j = 0; j < COLS; j ++) {
-            frame_buf1[i][j] = 0x0000ff00;
-        }
-    }
-
     // initial control values
     frame_buf_read = &frame_buf0;
     frame_buf_write = &frame_buf1;
@@ -101,14 +90,6 @@ DisplayHandle init_display_driver() {
         .frame_buf_write = frame_buf_write,
         .update_frame = update_frame};
     return dh;
-
-    sleep_ms(1000);
-
-    for (int i = 0; i < ROWS; i ++) {
-        for (int j = 0; j < COLS; j ++) {
-            frame_buf0[i][j] = 0x00ff0000;
-        }
-    }
 }
 
 // continually refresh the display

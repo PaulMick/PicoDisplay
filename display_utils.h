@@ -12,6 +12,7 @@ void draw_pixel(int x, int y, uint8_t r, uint8_t g, uint8_t b);
 void draw_pixel_enc(int x, int y, uint32_t xbgr);
 void draw_pixel_raw(int x, int y, uint8_t r, uint8_t g, uint8_t b);
 void draw_pixel_raw_enc(int x, int y, uint32_t xbgr);
+void fill_frame(uint8_t r, uint8_t g, uint8_t b);
 void draw_line(int x, int y, line_dir_t dir, int len, uint8_t r, uint8_t g, uint8_t b);
 
 #endif
