@@ -1,4 +1,4 @@
-static uint32_t font_5x5_flex[128] = {
+static uint32_t font_5x5[128] = {
     0x00000000,
     0x00000000,
     0x00000000,

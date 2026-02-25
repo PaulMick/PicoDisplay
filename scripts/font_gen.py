@@ -1,8 +1,8 @@
 import pygame
 
-# This popup assists in the creation of variable width binary bitmaps fonts, with widths ranging from 0-5 pixels
+# This popup assists in the creation of variable width binary bitmaps fonts, with varying widths
 # 4 bytes (32 bits) will be used to store the representation of each of the 128 standard ASCII characters in order
-# The first 25 (on the little endian side) represent the up to 5x5 pixel bitmap, and the last 7 specify the width of the character (0-5 pixels)
+# The first 25 (on the little endian side) represent the up to 5x5 pixel bitmap, and the last 7 specify the width of the character
 # e.g. 0b00001011111111111111111111111111 would store a 5x5 square that is completely filled in
 #        ^width^^--------bitmap---------^
 
@@ -30,7 +30,7 @@ spacing_overrides = {
     32: 3 # [SPACE]
 }
 
-font_name = "font_5x5_flex"
+font_name = "font_5x5"
 
 # Pack each character bitmap into 4 bytes and write it to the file
 def print_font(grids: list[list[list[int]]], fname: str) -> None:

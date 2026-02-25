@@ -56,19 +56,19 @@ void draw_line(int x, int y, line_dir_t dir, int len, uint8_t r, uint8_t g, uint
         return;
     }
     uint32_t xbgr = rgb_encode(r, g, b);
-    if (dir == DOWN) {
+    if (dir == LINE_DOWN) {
         for (int i = 0; i < len; i ++) {
             draw_pixel_enc(x, y + i, xbgr);
         }
-    } else if (dir ==  UP) {
+    } else if (dir ==  LINE_UP) {
         for (int i = 0; i < len; i ++) {
             draw_pixel_enc(x, y - i, xbgr);
         }
-    } else if (dir ==  LEFT) {
+    } else if (dir ==  LINE_LEFT) {
         for (int i = 0; i < len; i ++) {
             draw_pixel_enc(x - i, y, xbgr);
         }
-    } else if (dir ==  RIGHT) {
+    } else if (dir ==  LINE_RIGHT) {
         for (int i = 0; i < len; i ++) {
             draw_pixel_enc(x + i, y, xbgr);
         }
@@ -86,10 +86,10 @@ void draw_rect(int x, int y, int width, int height, int thickness, uint8_t r, ui
         }
     } else {
         for (int i = 0; i < thickness; i ++) {
-            draw_line(x + i, y + i, RIGHT, width - (2 * i), r, g, b);
-            draw_line(x + i, y + height - i - 1, RIGHT, width - (2 * i), r, g, b);
-            draw_line(x + i, y + i + 1, DOWN, height - 2 - (2 * i), r, g, b);
-            draw_line(x + width - i - 1, y + i + 1, DOWN, height - 2 - (2 * i), r, g, b);
+            draw_line(x + i, y + i, LINE_RIGHT, width - (2 * i), r, g, b);
+            draw_line(x + i, y + height - i - 1, LINE_RIGHT, width - (2 * i), r, g, b);
+            draw_line(x + i, y + i + 1, LINE_DOWN, height - 2 - (2 * i), r, g, b);
+            draw_line(x + width - i - 1, y + i + 1, LINE_DOWN, height - 2 - (2 * i), r, g, b);
         }
     }
 }
