@@ -6,7 +6,7 @@ typedef enum {
 } line_dir_t;
 
 typedef enum {
-    FONT_5X5
+    FONT_5X5_FLEX
 } font_t;
 
 #endif

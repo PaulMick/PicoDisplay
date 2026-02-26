@@ -34,6 +34,7 @@ int run() {
     uint frame_count = 0;
     while (1) {
         draw_rect(1, 1, 10, 20, 2, 255, 255, 0);
+        draw_char(12, 1, 'P', FONT_5X5_FLEX, 3, 194, 252);
 
         update_frame();
         frame_count ++;

@@ -1,6 +1,7 @@
 #include "pico/stdio.h"
 #include "display_driver.h"
 #include "gen_utils.h"
+#include "display_utils.h"
 
 DisplayHandle dh;
 
@@ -93,3 +94,22 @@ void draw_rect(int x, int y, int width, int height, int thickness, uint8_t r, ui
         }
     }
 }
+
+// draw a character at x, y (top left corner)
+int draw_char(int x, int y, char c, font_t font, uint8_t r, uint8_t g, uint8_t b) {
+    uint32_t xbgr = rgb_encode(r, g, b);
+    if (font == FONT_5X5_FLEX) {
+        uint32_t font_char = font_5x5_flex[(int) c];
+        int width = font_char >> 25;
+        for (int i = 0; i < width; i ++) {
+            for (int j = 0; j < 5; j ++) {
+                if (font_char & (1 << (i * 5 + j))) {
+                    draw_pixel_enc(x + i, y + j, xbgr);
+                }
+            }
+        }
+        return width;
+    }
+    return 0;
+}
+
