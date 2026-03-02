@@ -33,8 +33,11 @@ int init() {
 int run() {
     uint frame_count = 0;
     while (1) {
-        draw_rect(1, 1, 10, 20, 2, 255, 255, 0);
-        draw_char(12, 1, 'P', FONT_5X5_FLEX, 3, 194, 252);
+        // draw_str(3, 3, "GO PURDUE!", FONT_5X5_FLEX, 155, 155, 100);
+        // draw_rect(0, 0, 64, 32, 1, 255, 255, 255);
+        for (int i = 0; i < 16; i ++) {
+            draw_rect(i, i, 64 - 2 * i, 32 - 2 * i, 1, 255 - 16 * i, 255 - 16 * i, 255 - 16 * i);
+        }
 
         update_frame();
         frame_count ++;
