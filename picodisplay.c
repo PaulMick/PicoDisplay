@@ -43,11 +43,13 @@ int run() {
         //     dir = 1;
         // }
 
-        for (int i = 0; i < 64; i ++) {
-            draw_line(i, 0, LINE_DOWN, 32, 255 - 4 * i, 0, i * 4);
-        }
+        // for (int i = 0; i < 64; i ++) {
+        //     draw_line(i, 0, LINE_DOWN, 32, 255 - 4 * i, 0, i * 4);
+        // }
 
         // draw_line(x, 0, LINE_DOWN, 32, 255, 255, 255);
+
+        draw_rect(0, 0, 64, 32, 1, 255, 255, 255);
 
         
         // x += (x > 1 ? (x / 16) + 1 : 1) * dir;

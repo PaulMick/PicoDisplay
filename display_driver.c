@@ -47,13 +47,13 @@ int done_writing;
 int done_reading;
 int *done_writing_ptr = &done_writing;
 int *done_reading_ptr = &done_reading;
-static uint32_t gc_row[2][COLS];
+static uint32_t current_row[2][COLS];
 
 // pio stuff
 PIO pio;
-uint sm_data;
+uint sm_rgb;
 uint sm_row;
-uint data_prog_offs;
+uint rgb_prog_offs;
 uint row_prog_offs;
 
 const uint8_t gamma8[] = {
@@ -111,11 +111,11 @@ DisplayHandle init_display_driver() {
 
     // pio
     pio = pio0;
-    sm_data = 0;
+    sm_rgb = 0;
     sm_row = 1;
-    data_prog_offs = pio_add_program(pio, &hub75_data_rgb888_program);
+    rgb_prog_offs = pio_add_program(pio, &hub75_data_rgb_program);
     row_prog_offs = pio_add_program(pio, &hub75_row_program);
-    hub75_data_rgb888_program_init(pio, sm_data, data_prog_offs, RGB_BASE, CLK);
+    hub75_data_rgb_program_init(pio, sm_rgb, rgb_prog_offs, RGB_BASE, CLK);
     hub75_row_program_init(pio, sm_row, row_prog_offs, SEL_BASE, 4, LAT);
 
     // start display driver on core 1, leaving core 0 for other tasks
@@ -131,7 +131,7 @@ DisplayHandle init_display_driver() {
 // continually refresh the display
 void start_refresh() {
     while (1) {
-        // if new frame is ready, wait until switched
+        // if new frame is ready swap buffers
         if (multicore_fifo_rvalid()) {
             uint32_t cmd = multicore_fifo_pop_blocking();
             if (cmd == SWAP) {
@@ -143,27 +143,25 @@ void start_refresh() {
         // display
         for (int rowsel = 0; rowsel < ROW_PAIRS; ++rowsel) {
             for (int x = 0; x < COLS; ++x) {
-                // set pixels with gamma correction
-                gc_row[0][x] = gamma_correct((*frame_buf_read)[rowsel][x]);
-                gc_row[1][x] = gamma_correct((*frame_buf_read)[rowsel + ROW_PAIRS][x]);
-                
+                // set current row pixels with gamma correction
+                current_row[0][x] = gamma_correct((*frame_buf_read)[rowsel][x]);
+                current_row[1][x] = gamma_correct((*frame_buf_read)[rowsel + ROW_PAIRS][x]);
             }
-            for (int bit = 0; bit < 8; ++bit) {
-                hub75_data_rgb888_set_shift(pio, sm_data, data_prog_offs, bit);
+            for (int bit = 0; bit < 8; bit ++) {
+                hub75_data_rgb_set_rgb(pio, sm_rgb, rgb_prog_offs, bit);
                 for (int x = 0; x < COLS; ++x) {
-                    pio_sm_put_blocking(pio, sm_data, gc_row[0][x]);
-                    pio_sm_put_blocking(pio, sm_data, gc_row[1][x]);
+                    pio_sm_put_blocking(pio, sm_rgb, current_row[0][x]);
+                    pio_sm_put_blocking(pio, sm_rgb, current_row[1][x]);
                 }
-                // dummy pixel per lane
-                pio_sm_put_blocking(pio, sm_data, 0);
-                pio_sm_put_blocking(pio, sm_data, 0);
+                // 1 dummy pixel per lane
+                pio_sm_put_blocking(pio, sm_rgb, 0);
+                pio_sm_put_blocking(pio, sm_rgb, 0);
                 // sm is finished when it stalls on empty tx fifo
-                hub75_wait_tx_stall(pio, sm_data);
-                // also check that previous oen pulse is finished, else things can get out of sequence
+                hub75_wait_tx_stall(pio, sm_rgb);
+                // check that previous oen pulse is finished
                 hub75_wait_tx_stall(pio, sm_row);
-
                 // latch row data, pulse output enable for new row.
-                pio_sm_put_blocking(pio, sm_row, rowsel | (100u * (1u << bit) << 5));
+                pio_sm_put_blocking(pio, sm_row, rowsel | (100 * (1 << bit) << 5));
             }
         }
     }
