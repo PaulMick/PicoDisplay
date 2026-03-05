@@ -1,6 +1,7 @@
 #include "pico/stdio.h"
 #include "display_driver.h"
 #include "gen_utils.h"
+#include "assets.h"
 #include "display_utils.h"
 
 DisplayHandle dh;

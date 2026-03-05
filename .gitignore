@@ -3,3 +3,5 @@ build
 secrets/*
 reference/*
 scripts/env-picodisplay/
+scripts/input/*
+scripts/output/*
