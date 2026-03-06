@@ -1,26 +1,26 @@
 import numpy as np
 import cv2
 
-width = 5
-height = 5
+width = 23
+height = 32
 
-fname = "smile"
-cname = "smile"
+fname = "bob"
+cname = "bob"
 
 black_is_transparent = True
 
 cv_im = cv2.imread(f"input/{fname}.png")
 np_im = np.asarray(cv_im)
 
-print(f"#define {cname.upper()}_WIDTH = {width}")
-print(f"#define {cname.upper()}_HEIGHT = {height}")
+print(f"#define {cname.upper()}_WIDTH {width}")
+print(f"#define {cname.upper()}_HEIGHT {height}")
 print(f"static uint32_t {cname}_img[{height}][{width}] = {'{'}")
 for y in range(height):
     print("    {", end = "")
     for x in range(width):
-        r = int(np_im[y, x, 0])
+        b = int(np_im[y, x, 0])
         g = int(np_im[y, x, 1])
-        b = int(np_im[y, x, 2])
+        r = int(np_im[y, x, 2])
         if r == 1: r = 0
         if g == 1: g = 0
         if b == 1: b = 0

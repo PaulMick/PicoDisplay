@@ -49,10 +49,11 @@ int run() {
 
         // draw_line(x, 0, LINE_DOWN, 32, 255, 255, 255);
 
-        draw_rect(0, 0, 64, 32, 1, 255, 255, 255);
+        // draw_rect(0, 0, 64, 32, 1, 255, 255, 255);
 
-        draw_str(2, 2, "HELLO WORLD!", FONT_5X5_FLEX, 255, 255, 0);
-
+        // draw_str(2, 2, "HELLO WORLD!", FONT_5X5_FLEX, 255, 255, 0);
+        // draw_img(2, 8, IMG_SMILE);
+        draw_img(20, 0, IMG_BOB);
         
         // x += (x > 1 ? (x / 16) + 1 : 1) * dir;
         ///////////////////////////

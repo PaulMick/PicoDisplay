@@ -81,8 +81,8 @@ void draw_line(int x, int y, line_dir_t dir, int len, uint8_t r, uint8_t g, uint
 void draw_rect(int x, int y, int width, int height, int thickness, uint8_t r, uint8_t g, uint8_t b) {
     uint32_t xbgr = rgb_encode(r, g, b);
     if (thickness == -1) {
-        for (int i = 0; i < width; i ++) {
-            for (int j = 0; j < height; j ++) {
+        for (int j = 0; j < height; j ++) {
+            for (int i = 0; i < width; i ++) {
                 draw_pixel_enc(x + i, y + j, xbgr);
             }
         }
@@ -102,8 +102,8 @@ int draw_char(int x, int y, char c, font_t font, uint8_t r, uint8_t g, uint8_t b
     if (font == FONT_5X5_FLEX) {
         uint32_t font_char = font_5x5_flex[(int) c];
         int width = font_char >> 25;
-        for (int i = 0; i < width; i ++) {
-            for (int j = 0; j < 5; j ++) {
+        for (int j = 0; j < 5; j ++) {
+            for (int i = 0; i < width; i ++) {
                 if (font_char & (1 << (i * 5 + j))) {
                     draw_pixel_enc(x + i, y + j, xbgr);
                 }
@@ -120,4 +120,33 @@ void draw_str(int x, int y, char *str, font_t font, uint8_t r, uint8_t g, uint8_
     while (str[i] != '\0') {
         x += draw_char(x, y, str[i++], font, r, g, b) + 1;
     }
+}
+
+// draw an image at x, y (top left corner)
+void draw_img(int x, int y, img_t img) {
+    int black_is_transparent = 0;
+    switch (img) {
+        case IMG_SMILE:
+            black_is_transparent = smile_img[0][0] >> 24;
+            for (int j = 0; j < SMILE_HEIGHT; j ++) {
+                for (int i = 0; i < SMILE_WIDTH; i ++) {
+                    if (!black_is_transparent || !(smile_img[j][i] & 1 << 24)) {
+                        draw_pixel_enc(x + i, y + j, smile_img[j][i]);
+                    }
+                }
+            }
+            break;
+        case IMG_BOB:
+            black_is_transparent = bob_img[0][0] >> 24;
+            for (int j = 0; j < BOB_HEIGHT; j ++) {
+                for (int i = 0; i < BOB_WIDTH; i ++) {
+                    if (!black_is_transparent || !(bob_img[j][i] & 1 << 24)) {
+                        draw_pixel_enc(x + i, y + j, bob_img[j][i]);
+                    }
+                }
+            }
+            break;
+        default: return; break;
+    }
+    
 }

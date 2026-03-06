@@ -17,5 +17,6 @@ void draw_line(int x, int y, line_dir_t dir, int len, uint8_t r, uint8_t g, uint
 void draw_rect(int x, int y, int width, int height, int thickness, uint8_t r, uint8_t g, uint8_t b);
 int draw_char(int x, int y, char c, font_t font, uint8_t r, uint8_t g, uint8_t b);
 void draw_str(int x, int y, char *str, font_t font, uint8_t r, uint8_t g, uint8_t b);
+void draw_img(int x, int y, img_t img);
 
 #endif
