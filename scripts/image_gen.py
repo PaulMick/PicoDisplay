@@ -1,11 +1,11 @@
 import numpy as np
 import cv2
 
+# set these manually
 width = 23
 height = 32
-
-fname = "bob"
-cname = "bob"
+fname = ""
+cname = ""
 
 black_is_transparent = True
 

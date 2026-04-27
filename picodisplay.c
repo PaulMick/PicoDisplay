@@ -8,6 +8,7 @@
 #include "gen_utils.h"
 #include "display_driver.h"
 #include "display_utils.h"
+#include "assets.h"
 
 int init() {
     // stdio
@@ -31,31 +32,12 @@ int init() {
 }
 
 int run() {
-    // int x = 0;
-    // int dir = 1;
     while (1) {
         fill_frame(0, 0, 0);
         ///////////////////////////
-        // if (x >= 63 && dir == 1) {
-        //     dir = -1;
 
-        // } else if (x <= 0 && dir == -1) {
-        //     dir = 1;
-        // }
-
-        // for (int i = 0; i < 64; i ++) {
-        //     draw_line(i, 0, LINE_DOWN, 32, 255 - 4 * i, 0, i * 4);
-        // }
-
-        // draw_line(x, 0, LINE_DOWN, 32, 255, 255, 255);
-
-        // draw_rect(0, 0, 64, 32, 1, 255, 255, 255);
-
-        // draw_str(2, 2, "HELLO WORLD!", FONT_5X5_FLEX, 255, 255, 0);
-        // draw_img(2, 8, IMG_SMILE);
-        draw_img(20, 0, IMG_BOB);
         
-        // x += (x > 1 ? (x / 16) + 1 : 1) * dir;
+
         ///////////////////////////
         sleep_ms(1);
         update_frame();

@@ -123,30 +123,14 @@ void draw_str(int x, int y, char *str, font_t font, uint8_t r, uint8_t g, uint8_
 }
 
 // draw an image at x, y (top left corner)
-void draw_img(int x, int y, img_t img) {
-    int black_is_transparent = 0;
-    switch (img) {
-        case IMG_SMILE:
-            black_is_transparent = smile_img[0][0] >> 24;
-            for (int j = 0; j < SMILE_HEIGHT; j ++) {
-                for (int i = 0; i < SMILE_WIDTH; i ++) {
-                    if (!black_is_transparent || !(smile_img[j][i] & 1 << 24)) {
-                        draw_pixel_enc(x + i, y + j, smile_img[j][i]);
-                    }
-                }
-            }
-            break;
-        case IMG_BOB:
-            black_is_transparent = bob_img[0][0] >> 24;
-            for (int j = 0; j < BOB_HEIGHT; j ++) {
-                for (int i = 0; i < BOB_WIDTH; i ++) {
-                    if (!black_is_transparent || !(bob_img[j][i] & 1 << 24)) {
-                        draw_pixel_enc(x + i, y + j, bob_img[j][i]);
-                    }
-                }
-            }
-            break;
-        default: return; break;
+void draw_img(int x, int y, int width, int height, uint32_t *img) {
+    if (img == NULL || width < 1 || height < 1) {
+        return;
     }
-    
+    int black_is_transparent = img[0] >> 24;
+    for (int j = 0; j < height; j ++) {
+        for (int i = 0; i < width; i ++) {
+            draw_pixel_enc(x + i, y + j, img[j * width + i]);
+        }
+    }
 }

@@ -9,8 +9,4 @@ typedef enum {
     FONT_5X5_FLEX
 } font_t;
 
-typedef enum {
-    IMG_SMILE, IMG_BOB
-} img_t;
-
 #endif
