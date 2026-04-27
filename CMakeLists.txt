@@ -40,6 +40,7 @@ add_executable(PicoDisplay
     picodisplay.c
     display_driver.c
     display_utils.c
+    ntp.c
 )
 
 pico_set_program_name(PicoDisplay "PicoDisplay")
