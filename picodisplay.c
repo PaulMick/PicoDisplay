@@ -1,13 +1,9 @@
 #include "pico/stdio.h"
-#include "pico/cyw43_arch.h"
-#include "pico/async_context.h"
-#include "lwip/altcp_tls.h"
-
-#include "secrets/wifi_secrets.h"
 
 #include "gen_utils.h"
 #include "display_driver.h"
 #include "ntp.h"
+#include "wifi.h"
 #include "display_utils.h"
 #include "assets.h"
 #include "debug_utils.h"
@@ -16,9 +12,9 @@
 
 #include "hardware/clocks.h"
 
-int init() {
-    // Add this before cyw43_arch_init()
+int wifi_status = -1;
 
+int init() {
     // stdio
     stdio_init_all();
 
@@ -27,36 +23,10 @@ int init() {
     }
 
     // wifi
-    int init_code = cyw43_arch_init();
-    if (init_code) {
-        if (DEBUG_LEVEL >= DEBUG_MINIMAL) {
-            fprintf(stderr, "Wi-Fi init failed, code %d\n", init_code);
-        }
-    } else {
-        if (DEBUG_LEVEL >= DEBUG_NORMAL) {
-            printf("Wi-Fi init successful\n");
-        }
-    }
-    cyw43_arch_enable_sta_mode();
-    int retries = 0;
-    while (retries < 3) {
-        if (DEBUG_LEVEL >= DEBUG_HIGH) {
-            printf("Try %d: ", retries + 1);
-        }
-        int connect_code = cyw43_arch_wifi_connect_timeout_ms(WIFI_SSID, WIFI_PASSWORD, WIFI_AUTH, 10000);
-        if (connect_code) {
-            if (DEBUG_LEVEL >= DEBUG_NORMAL) {
-                fprintf(stderr, "Timed out connecting to network \"%s\", code %d\n", WIFI_SSID, connect_code);
-            }
-        } else {
-            if (DEBUG_LEVEL >= DEBUG_HIGH) {
-                printf("Connected to %s\n", WIFI_SSID);
-            }
-            break;
-        }
-        retries ++;
-    }
-    cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, 1);
+    init_wifi();
+    // connect_wifi();
+    start_check_connect_wifi();
+
 
     // ntp
     init_ntp();
@@ -71,6 +41,9 @@ int init() {
 }
 
 int run() {
+    if (DEBUG_LEVEL >= DEBUG_HIGH) {
+        printf("start run\n");
+    }
     struct tm *tm_ptr;
     time_t t;
     while (1) {

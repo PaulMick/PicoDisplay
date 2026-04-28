@@ -41,6 +41,8 @@ add_executable(PicoDisplay
     display_driver.c
     display_utils.c
     ntp.c
+    wifi.c
+    dp_states/clock_hms_state.c
 )
 
 pico_set_program_name(PicoDisplay "PicoDisplay")

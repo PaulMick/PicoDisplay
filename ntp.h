@@ -9,15 +9,15 @@
 #include "lwip/pbuf.h"
 #include "lwip/udp.h"
 
-#define TIMEZONE_OFFSET_SEC (-5 * 3600) // offset from UTC in seconds
+#define TIMEZONE_OFFSET_SEC (-4 * 3600) // offset from UTC in seconds
 
 typedef struct NTP_T_ {
     ip_addr_t ntp_server_address;
     struct udp_pcb *ntp_pcb;
     async_at_time_worker_t request_worker;
     async_at_time_worker_t resend_worker;
-} NTP_T;
+} ntp_t;
 
-NTP_T* init_ntp();
+ntp_t* init_ntp();
 
 #endif

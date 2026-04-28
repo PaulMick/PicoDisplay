@@ -10,7 +10,7 @@
 #include "ntp.h"
 #include "debug_utils.h"
 
-static void ntp_result(NTP_T* state, int status, time_t *result) {
+static void ntp_result(ntp_t* state, int status, time_t *result) {
     if (status == 0 && result) {
         struct tm *utc = gmtime(result);
         // set time
@@ -28,7 +28,7 @@ static void ntp_result(NTP_T* state, int status, time_t *result) {
     }
 }
 
-static void ntp_request(NTP_T *state) {
+static void ntp_request(ntp_t *state) {
     // cyw43_arch_lwip_begin/end should be used around calls into lwIP to ensure correct locking.
     // You can omit them if you are in a callback from lwIP. Note that when using pico_cyw_arch_poll
     // these calls are a no-op and can be omitted, but it is a good practice to use them in
@@ -44,7 +44,7 @@ static void ntp_request(NTP_T *state) {
 }
 
 static void ntp_recv(void *arg, struct udp_pcb *pcb, struct pbuf *p, const ip_addr_t *addr, u16_t port) {
-    NTP_T *state = (NTP_T*)arg;
+    ntp_t *state = (ntp_t*)arg;
     uint8_t mode = pbuf_get_at(p, 0) & 0x7;
     uint8_t stratum = pbuf_get_at(p, 1);
 
@@ -67,7 +67,7 @@ static void ntp_recv(void *arg, struct udp_pcb *pcb, struct pbuf *p, const ip_ad
 }
 
 static void ntp_dns_found(const char *hostname, const ip_addr_t *ipaddr, void *arg) {
-    NTP_T *state = (NTP_T*)arg;
+    ntp_t *state = (ntp_t *) arg;
     if (ipaddr) {
         state->ntp_server_address = *ipaddr;
         if (DEBUG_LEVEL >= DEBUG_NORMAL) {
@@ -83,7 +83,7 @@ static void ntp_dns_found(const char *hostname, const ip_addr_t *ipaddr, void *a
 }
 
 static void request_worker_fn(__unused async_context_t *context, async_at_time_worker_t *worker) {
-    NTP_T* state = (NTP_T*)worker->user_data;
+    ntp_t* state = (ntp_t *) worker->user_data;
     hard_assert(async_context_add_at_time_worker_in_ms(cyw43_arch_async_context(), &state->resend_worker, NTP_RESEND_TIME_MS)); // in case UDP request is lost
     int err = dns_gethostbyname(NTP_SERVER, &state->ntp_server_address, ntp_dns_found, state);
     if (err == ERR_OK) {
@@ -97,15 +97,15 @@ static void request_worker_fn(__unused async_context_t *context, async_at_time_w
 }
 
 static void resend_worker_fn(__unused async_context_t *context, async_at_time_worker_t *worker) {
-    NTP_T* state = (NTP_T*)worker->user_data;
+    ntp_t* state = (ntp_t *) worker->user_data;
     if (DEBUG_LEVEL >= DEBUG_NORMAL) {
             printf("ntp request failed\n");
         }
     ntp_result(state, -1, NULL);
 }
 
-NTP_T* init_ntp() {
-    NTP_T *state = (NTP_T*)calloc(1, sizeof(NTP_T));
+ntp_t* init_ntp() {
+    ntp_t *state = (ntp_t *) calloc(1, sizeof(ntp_t));
     if (!state) {
         if (DEBUG_LEVEL >= DEBUG_MINIMAL) {
             printf("failed to allocate ntp state\n");
