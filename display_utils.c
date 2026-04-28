@@ -115,10 +115,17 @@ int draw_char(int x, int y, char c, font_t font, uint8_t r, uint8_t g, uint8_t b
 }
 
 // draw a string at x, y (top left corner)
-void draw_str(int x, int y, char *str, font_t font, uint8_t r, uint8_t g, uint8_t b) {
-    int i = 0;
-    while (str[i] != '\0') {
-        x += draw_char(x, y, str[i++], font, r, g, b) + 1;
+void draw_str(int x, int y, char *str, int len, font_t font, uint8_t r, uint8_t g, uint8_t b) {
+    
+    if (len <= 0) {
+        int i = 0;
+        while (str[i] != '\0') {
+            x += draw_char(x, y, str[i++], font, r, g, b) + 1;
+        }
+    } else {
+        for (int i = 0; i < len; i ++) {
+            x += draw_char(x, y, str[i], font, r, g, b) + 1;
+        }
     }
 }
 

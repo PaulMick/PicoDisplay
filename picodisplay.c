@@ -12,6 +12,8 @@
 
 #include "hardware/clocks.h"
 
+#include "dp_states/clock_hms_state.h"
+
 int wifi_status = -1;
 
 int init() {
@@ -46,13 +48,15 @@ int run() {
     }
     struct tm *tm_ptr;
     time_t t;
+    init_clock_hms_state();
     while (1) {
         fill_frame(0, 0, 0);
         ///////////////////////////
 
         t = time(NULL);
         tm_ptr = localtime(&t);
-        draw_str(-10, 0, asctime(tm_ptr), FONT_5X5_FLEX, 255, 255, 255);
+        // draw_str(-10, 0, asctime(tm_ptr), -1, FONT_5X5_FLEX, 255, 255, 255);
+        draw_clock_hms_state();
 
         ///////////////////////////
         sleep_ms(1);
