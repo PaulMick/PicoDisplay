@@ -11,6 +11,7 @@
 #include "hub75.pio.h"
 
 #include "display_driver.h"
+#include "debug_utils.h"
 
 // pin definitions
 #define RGB_BASE 10
@@ -91,17 +92,19 @@ DisplayHandle init_display_driver() {
         frame_buf1[i] = calloc(COLS, sizeof(uint32_t));
     }
 
-    // // colors buffers differently, useful to check if the buffer swapping is working correctly
-    // for (int i = 0; i < ROWS; i ++) {
-    //     for (int j = 0; j < COLS; j ++) {
-    //         frame_buf0[i][j] = 0x0000000f;
-    //     }
-    // }
-    // for (int i = 0; i < ROWS; i ++) {
-    //     for (int j = 0; j < COLS; j ++) {
-    //         frame_buf1[i][j] = 0x00000f00;
-    //     }
-    // }
+    // colors buffers differently, useful to check if the buffer swapping is working correctly
+    if (DEBUG_LEVEL >= DEBUG_HIGH) {
+        for (int i = 0; i < ROWS; i ++) {
+            for (int j = 0; j < COLS; j ++) {
+                frame_buf0[i][j] = 0x0000000f;
+            }
+        }
+        for (int i = 0; i < ROWS; i ++) {
+            for (int j = 0; j < COLS; j ++) {
+                frame_buf1[i][j] = 0x00000f00;
+            }
+        }
+    }
 
     // initial control values
     frame_buf_read = &frame_buf0;
@@ -169,5 +172,8 @@ void start_refresh() {
 
 // swap new frame into read buffer to be displayed
 void update_frame() {
+    if (DEBUG_LEVEL >= DEBUG_EXTREME) {
+        printf("update_frame\n");
+    }
     multicore_fifo_push_blocking(SWAP);
 }

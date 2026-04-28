@@ -10,6 +10,7 @@
 #include "ntp.h"
 #include "display_utils.h"
 #include "assets.h"
+#include "debug_utils.h"
 
 #include <time.h>
 
@@ -21,25 +22,36 @@ int init() {
     // stdio
     stdio_init_all();
 
-    printf("start init\n");
+    if (DEBUG_LEVEL >= DEBUG_HIGH) {
+        printf("start init\n");
+    }
 
     // wifi
     int init_code = cyw43_arch_init();
     if (init_code) {
-        fprintf(stderr, "Wi-Fi init failed, code %d\n", init_code);
+        if (DEBUG_LEVEL >= DEBUG_MINIMAL) {
+            fprintf(stderr, "Wi-Fi init failed, code %d\n", init_code);
+        }
     } else {
-        printf("Wi-Fi init successful\n");
+        if (DEBUG_LEVEL >= DEBUG_NORMAL) {
+            printf("Wi-Fi init successful\n");
+        }
     }
     cyw43_arch_enable_sta_mode();
     int retries = 0;
     while (retries < 3) {
-        printf("Try %d: ", retries + 1);
+        if (DEBUG_LEVEL >= DEBUG_HIGH) {
+            printf("Try %d: ", retries + 1);
+        }
         int connect_code = cyw43_arch_wifi_connect_timeout_ms(WIFI_SSID, WIFI_PASSWORD, WIFI_AUTH, 10000);
-        // int connect_code = cyw43_wifi_join(&cyw43_state, 16, "Paul's iPhone 19", 10, "mickpsss11", CYW43_AUTH_WPA2_AES_PSK, NULL, 0);
         if (connect_code) {
-            fprintf(stderr, "Timed out connecting to network \"%s\", code %d\n", WIFI_SSID, connect_code);
+            if (DEBUG_LEVEL >= DEBUG_NORMAL) {
+                fprintf(stderr, "Timed out connecting to network \"%s\", code %d\n", WIFI_SSID, connect_code);
+            }
         } else {
-            printf("Connected to %s\n", WIFI_SSID);
+            if (DEBUG_LEVEL >= DEBUG_HIGH) {
+                printf("Connected to %s\n", WIFI_SSID);
+            }
             break;
         }
         retries ++;
