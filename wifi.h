@@ -3,6 +3,7 @@
 
 #define WIFI_ENABLED 1
 #define WIFI_RETRY_TIME_SEC 5
+#define WIFI_CHECK_TIME_SEC 20
 
 int init_wifi();
 int connect_wifi();

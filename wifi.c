@@ -94,7 +94,10 @@ void start_check_connect_wifi() {
     }
     if (!is_wifi_connected()) {
         connect_wifi();
+        uint64_t target = timer1_hw->timerawl + WIFI_RETRY_TIME_SEC * 1000000;
+        timer_hardware_alarm_set_target(timer1_hw, 3, target);
+    } else {
+        uint64_t target = timer1_hw->timerawl + WIFI_CHECK_TIME_SEC * 1000000;
+        timer_hardware_alarm_set_target(timer1_hw, 3, target);
     }
-    uint64_t target = timer1_hw->timerawl + WIFI_RETRY_TIME_SEC * 1000000;
-    timer_hardware_alarm_set_target(timer1_hw, 3, target);
 }
