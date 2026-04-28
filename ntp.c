@@ -15,7 +15,7 @@ static void ntp_result(NTP_T* state, int status, time_t *result) {
         struct tm *utc = gmtime(result);
         // set time
         // In ntp_result(), after computing epoch, add:
-        struct timeval tv = { .tv_sec = *result, .tv_usec = 0 };
+        struct timeval tv = { .tv_sec = *result + TIMEZONE_OFFSET_SEC, .tv_usec = 0 };
         settimeofday(&tv, NULL);
         if (DEBUG_LEVEL >= DEBUG_HIGH) {
             printf("got ntp response: %02d/%02d/%04d %02d:%02d:%02d\n", utc->tm_mday, utc->tm_mon + 1, utc->tm_year + 1900, utc->tm_hour, utc->tm_min, utc->tm_sec);
