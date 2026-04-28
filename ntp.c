@@ -12,6 +12,10 @@
 static void ntp_result(NTP_T* state, int status, time_t *result) {
     if (status == 0 && result) {
         struct tm *utc = gmtime(result);
+        // set time
+        // In ntp_result(), after computing epoch, add:
+    struct timeval tv = { .tv_sec = *result, .tv_usec = 0 };
+    settimeofday(&tv, NULL);
         printf("got ntp response: %02d/%02d/%04d %02d:%02d:%02d\n", utc->tm_mday, utc->tm_mon + 1, utc->tm_year + 1900,
                utc->tm_hour, utc->tm_min, utc->tm_sec);
     }
@@ -103,6 +107,7 @@ NTP_T* init_ntp() {
     state->request_worker.user_data = state;
     state->resend_worker.do_work = resend_worker_fn;
     state->resend_worker.user_data = state;
+    hard_assert(async_context_add_at_time_worker_in_ms(cyw43_arch_async_context(),  &state->request_worker, 0));
     return state;
 }
 
