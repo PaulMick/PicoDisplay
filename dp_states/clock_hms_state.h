@@ -8,8 +8,8 @@ typedef struct _clock_hms_state_t {
     int month;
     int month_day;
     int current_temp_f;
-    int high_temp_f;
-    int low_temp_f;
+    int current_wind_mph;
+    int gust_wind_mph;
     int weather_code;
     int hour;
     int minute;

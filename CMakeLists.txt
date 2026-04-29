@@ -43,6 +43,7 @@ add_executable(PicoDisplay
     ntp.c
     wifi.c
     dp_states/clock_hms_state.c
+    http/http_weather.c
 )
 
 pico_set_program_name(PicoDisplay "PicoDisplay")

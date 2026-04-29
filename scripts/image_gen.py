@@ -2,21 +2,21 @@ import numpy as np
 import cv2
 
 # set these manually
-width = 23
-height = 32
-fname = ""
-cname = ""
+width = 5
+height = 6
+fname = "wifi_disconnected"
+cname = "wifi_disconnected"
 
 black_is_transparent = True
 
 cv_im = cv2.imread(f"input/{fname}.png")
 np_im = np.asarray(cv_im)
 
-print(f"#define {cname.upper()}_WIDTH {width}")
-print(f"#define {cname.upper()}_HEIGHT {height}")
-print(f"static uint32_t {cname}_img[{height}][{width}] = {'{'}")
+print(f"static uint8_t {cname.lower()}_width = {width};")
+print(f"static uint8_t {cname.lower()}_height = {height};")
+print(f"static uint32_t {cname}_img[] = {'{'}")
 for y in range(height):
-    print("    {", end = "")
+    print("    ", end = "")
     for x in range(width):
         b = int(np_im[y, x, 0])
         g = int(np_im[y, x, 1])
@@ -28,5 +28,5 @@ for y in range(height):
         if black_is_transparent and r == 0 and g == 0 and b == 0:
             xbgr = xbgr | (1 << 24)
         print(f"{xbgr:#0{8}x}, ", end = "")
-    print("},")
+    print("")
 print("};")

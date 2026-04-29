@@ -8,6 +8,7 @@
 #include "gen_utils.h"
 #include "display_utils.h"
 #include "clock_hms_state.h"
+#include "http/http_weather.h"
 
 clock_hms_state_t *state;
 struct tm *tm_ptr;
@@ -21,8 +22,8 @@ void init_clock_hms_state() {
     state->month = 0;
     state->month_day = 0;
     state->current_temp_f = 0;
-    state->high_temp_f = 999;
-    state->low_temp_f = -99;
+    state->current_wind_mph = 99;
+    state->gust_wind_mph = 99;
     state->weather_code = 0;
     state->hour = 0;
     state->minute = 0;
@@ -125,11 +126,16 @@ void draw_clock_hms_state() {
     // right column
     sprintf(tmp, "%02d", state->second);
     draw_str(54, 7, tmp, 2, FONT_5X5_FLEX, 255, 255, 255);
-    sprintf(tmp, "%*d", 3, state->high_temp_f);
-    draw_str(52, 14, tmp, 3, FONT_5X5_FLEX, 235, 120, 120);
-    sprintf(tmp, "%*d", 3, state->low_temp_f);
-    draw_str(52, 20, tmp, 3, FONT_5X5_FLEX, 120, 120, 235);
+    sprintf(tmp, "C%*d", 2, state->current_wind_mph);
+    draw_str(52, 13, tmp, 3, FONT_5X5_FLEX, 255, 255, 255);
+    sprintf(tmp, "G%*d", 2, state->gust_wind_mph);
+    draw_str(51, 19, tmp, 3, FONT_5X5_FLEX, 255, 255, 255);
     // TODO: add weather code and wifi connection symbols
+    if (state->wifi_connected) {
+        draw_img(58, 25, wifi_connected_width, wifi_connected_height, wifi_connected_img);
+    } else {
+        draw_img(58, 25, wifi_disconnected_width, wifi_disconnected_height, wifi_disconnected_img);
+    }
     // main time
     if (HOUR_LEADING_ZERO || state->hour >= 10) {
         draw_hm_digit(state->hour / 10, 1, 7, 255, 255, 255);
