@@ -5,6 +5,7 @@
 #include "pico/stdio.h"
 
 #include "assets.h"
+#include "gen_utils.h"
 #include "display_utils.h"
 #include "clock_hms_state.h"
 
@@ -105,6 +106,9 @@ void draw_clock_hms_state() {
     state->day_abbr[0] = day_abbrs[tm_ptr->tm_wday][0];
     state->day_abbr[1] = day_abbrs[tm_ptr->tm_wday][1];
     state->day_abbr[2] = day_abbrs[tm_ptr->tm_wday][2];
+    if (!MILITARY_TIME && state->hour > 12) {
+        state->hour -= 12;
+    }
 
     // draw
     char tmp[50];
@@ -127,7 +131,9 @@ void draw_clock_hms_state() {
     draw_str(52, 20, tmp, 3, FONT_5X5_FLEX, 120, 120, 235);
     // TODO: add weather code and wifi connection symbols
     // main time
-    draw_hm_digit(state->hour / 10, 1, 7, 255, 255, 255);
+    if (HOUR_LEADING_ZERO || state->hour >= 10) {
+        draw_hm_digit(state->hour / 10, 1, 7, 255, 255, 255);
+    }
     draw_hm_digit(state->hour % 10, 13, 7, 255, 255, 255);
     draw_line(25, 16, LINE_DOWN, 2, 255, 255, 255);
     draw_line(25, 19, LINE_DOWN, 2, 255, 255, 255);

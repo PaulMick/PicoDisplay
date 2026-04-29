@@ -1,6 +1,8 @@
 #ifndef CLOCK_HMS_STATE_H
 #define CLOCK_HMS_STATE_H
 
+#define HOUR_LEADING_ZERO 0
+
 typedef struct _clock_hms_state_t {
     char day_abbr[3];
     int month;
