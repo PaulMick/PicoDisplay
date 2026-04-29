@@ -46,16 +46,11 @@ int run() {
     if (DEBUG_LEVEL >= DEBUG_HIGH) {
         printf("start run\n");
     }
-    struct tm *tm_ptr;
-    time_t t;
     init_clock_hms_state();
     while (1) {
         fill_frame(0, 0, 0);
         ///////////////////////////
 
-        t = time(NULL);
-        tm_ptr = localtime(&t);
-        // draw_str(-10, 0, asctime(tm_ptr), -1, FONT_5X5_FLEX, 255, 255, 255);
         draw_clock_hms_state();
 
         ///////////////////////////

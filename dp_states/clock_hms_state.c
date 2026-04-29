@@ -4,10 +4,13 @@
 #include <stdlib.h>
 #include "pico/stdio.h"
 
+#include "assets.h"
 #include "display_utils.h"
 #include "clock_hms_state.h"
 
 clock_hms_state_t *state;
+struct tm *tm_ptr;
+time_t t;
 
 void init_clock_hms_state() {
     state = malloc(sizeof(clock_hms_state_t));
@@ -20,8 +23,8 @@ void init_clock_hms_state() {
     state->high_temp_f = 999;
     state->low_temp_f = -99;
     state->weather_code = 0;
-    state->hour = 1;
-    state->minute = 12;
+    state->hour = 0;
+    state->minute = 0;
     state->second = 0;
     state->wifi_connected = 0;
 }
@@ -43,20 +46,65 @@ static void draw_hm_digit(uint8_t digit, int x, int y, uint8_t r, uint8_t g, uin
             draw_rect(x + 9, y + 2, 2, 8, -1, r, g, b);
             draw_rect(x, y + 12, 2, 10, -1, r, g, b);
             return;
+        case 3:
+            draw_rect(x, y, 11, 2, -1, r, g, b);
+            draw_rect(x, y + 10, 11, 2, -1, r, g, b);
+            draw_rect(x, y + 22, 11, 2, -1, r, g, b);
+            draw_rect(x + 9, y + 2, 2, 8, -1, r, g, b);
+            draw_rect(x + 9, y + 12, 2, 10, -1, r, g, b);
+            return;
+        case 4:
+            draw_rect(x, y, 2, 10, -1, r, g, b);
+            draw_rect(x + 9, y, 2, 24, -1, r, g, b);
+            draw_rect(x, y + 10, 11, 2, -1, r, g, b);
+            return;
+        case 5:
+            draw_rect(x, y, 11, 2, -1, r, g, b);
+            draw_rect(x, y + 10, 11, 2, -1, r, g, b);
+            draw_rect(x, y + 22, 11, 2, -1, r, g, b);
+            draw_rect(x, y + 2, 2, 8, -1, r, g, b);
+            draw_rect(x + 9, y + 12, 2, 10, -1, r, g, b);
+            return;
+        case 6:
+            draw_rect(x, y, 11, 2, -1, r, g, b);
+            draw_rect(x, y + 10, 11, 2, -1, r, g, b);
+            draw_rect(x, y + 22, 11, 2, -1, r, g, b);
+            draw_rect(x, y + 2, 2, 8, -1, r, g, b);
+            draw_rect(x + 9, y + 12, 2, 10, -1, r, g, b);
+            draw_rect(x, y + 12, 2, 10, -1, r, g, b);
+            return;
+        case 7:
+            draw_rect(x, y, 9, 2, -1, r, g, b);
+            draw_rect(x + 9, y, 2, 24, -1, r, g, b);
+            return;
+        case 8:
+            draw_rect(x, y, 11, 24, 2, r, g, b);
+            draw_rect(x + 2, y + 10, 9, 2, -1, r, g, b);
+            return;
+        case 9:
+            draw_rect(x, y, 11, 2, -1, r, g, b);
+            draw_rect(x, y + 10, 11, 2, -1, r, g, b);
+            draw_rect(x, y + 22, 11, 2, -1, r, g, b);
+            draw_rect(x, y + 2, 2, 8, -1, r, g, b);
+            draw_rect(x + 9, y + 12, 2, 10, -1, r, g, b);
+            draw_rect(x + 9, y + 2, 2, 8, -1, r, g, b);
+            return;
         default: return;
     }
 }
 
 void draw_clock_hms_state() {
     // update
-    // state->month ++;
-    // state->month_day ++;
-    // if (state->month >= 12) {
-    //     state->month = 0;
-    // }
-    // if (state->month_day >= 31) {
-    //     state->month_day = 0;
-    // }
+    t = time(NULL);
+    tm_ptr = localtime(&t);
+    state->hour = tm_ptr->tm_hour;
+    state->minute = tm_ptr->tm_min;
+    state->second = tm_ptr->tm_sec;
+    state->month = tm_ptr->tm_mon;
+    state->month_day = tm_ptr->tm_mday;
+    state->day_abbr[0] = day_abbrs[tm_ptr->tm_wday][0];
+    state->day_abbr[1] = day_abbrs[tm_ptr->tm_wday][1];
+    state->day_abbr[2] = day_abbrs[tm_ptr->tm_wday][2];
 
     // draw
     char tmp[50];

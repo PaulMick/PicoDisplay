@@ -52,7 +52,7 @@ int is_wifi_connected() {
             return 0;
         case CYW43_LINK_JOIN:
             if (DEBUG_LEVEL >= DEBUG_NORMAL) {
-                printf("WiFi Status: Link Joining\n");
+                printf("WiFi Status: Link Joined (Connected)\n");
             }
             return 1;
         case CYW43_LINK_NOIP:
