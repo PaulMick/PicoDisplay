@@ -94,8 +94,13 @@ static void draw_hm_digit(uint8_t digit, int x, int y, uint8_t r, uint8_t g, uin
         default: return;
     }
 }
-
+int x = 0;
 void draw_clock_hms_state() {
+    x ++;
+    if (x == 500) {
+        x = 0;
+        get_weather();
+    }
     // update
     t = time(NULL);
     tm_ptr = localtime(&t);
