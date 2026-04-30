@@ -14,7 +14,7 @@ clock_hms_state_t *state;
 struct tm *tm_ptr;
 time_t t;
 
-void init_clock_hms_state() {
+void init_clock_hms_state(int *wifi_connected) {
     state = malloc(sizeof(clock_hms_state_t));
     state->day_abbr[0] = 'N';
     state->day_abbr[1] = 'U';
@@ -28,7 +28,7 @@ void init_clock_hms_state() {
     state->hour = 0;
     state->minute = 0;
     state->second = 0;
-    state->wifi_connected = 0;
+    state->wifi_connected = wifi_connected;
 }
 
 static void draw_hm_digit(uint8_t digit, int x, int y, uint8_t r, uint8_t g, uint8_t b) {
@@ -130,11 +130,31 @@ void draw_clock_hms_state() {
     draw_str(52, 13, tmp, 3, FONT_5X5_FLEX, 255, 255, 255);
     sprintf(tmp, "G%*d", 2, state->gust_wind_mph);
     draw_str(51, 19, tmp, 3, FONT_5X5_FLEX, 255, 255, 255);
-    // TODO: add weather code and wifi connection symbols
-    if (state->wifi_connected) {
+    if (*(state->wifi_connected)) {
         draw_img(58, 25, wifi_connected_width, wifi_connected_height, wifi_connected_img);
     } else {
         draw_img(58, 25, wifi_disconnected_width, wifi_disconnected_height, wifi_disconnected_img);
+    }
+    if (state->weather_code < 100) {
+        draw_char(58, 0, 'X', FONT_5X5_FLEX, 255, 0, 0);
+    } else if (state->weather_code / 100 == 2) {
+        draw_img(56, 0, weather_code_width, weather_code_height, thunderstorm_img);
+    } else if (state->weather_code / 100 == 3) {
+        draw_img(56, 0, weather_code_width, weather_code_height, drizzle_img);
+    } else if (state->weather_code / 100 == 5) {
+        draw_img(56, 0, weather_code_width, weather_code_height, rain_img);
+    } else if (state->weather_code / 100 == 6) {
+        draw_img(56, 0, weather_code_width, weather_code_height, snow_img);
+    } else if (state->weather_code == 800) {
+        draw_img(56, 0, weather_code_width, weather_code_height, clear_img);
+    } else if (state->weather_code - 800 != 0 && state->weather_code - 800 < 10) {
+        draw_img(56, 0, weather_code_width, weather_code_height, clouds_img);
+    } else if (state->weather_code == 701 || state->weather_code == 741) {
+        draw_img(56, 0, weather_code_width, weather_code_height, fog_img);
+    } else if (state->weather_code == 771 || state->weather_code == 781) {
+        draw_img(56, 0, weather_code_width, weather_code_height, extreme_weather_img);
+    } else {
+        draw_img(56, 0, weather_code_width, weather_code_height, low_vis_img);
     }
     // main time
     if (HOUR_LEADING_ZERO || state->hour >= 10) {

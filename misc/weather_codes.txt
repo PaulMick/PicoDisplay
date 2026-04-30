@@ -1,0 +1,9 @@
+2XX: thunderstorm
+3XX: drizzle
+5XX: rain
+6XX: snow
+701, 741: fog
+711, 721, 731, 751, 761, 762: low_vis
+771, 781: extreme weather
+800: clear
+80X: clouds

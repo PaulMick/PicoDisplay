@@ -14,10 +14,10 @@ typedef struct _clock_hms_state_t {
     int hour;
     int minute;
     int second;
-    int wifi_connected;
+    int *wifi_connected;
 } clock_hms_state_t;
 
-void init_clock_hms_state();
+void init_clock_hms_state(int *wifi_connected);
 void draw_clock_hms_state();
 void deinit_clock_hms_state();
 

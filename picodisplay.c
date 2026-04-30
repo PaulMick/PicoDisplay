@@ -25,8 +25,7 @@ int init() {
     }
 
     // wifi
-    init_wifi();
-    // connect_wifi();
+    init_wifi(&wifi_status);
     start_check_connect_wifi();
 
 
@@ -46,7 +45,7 @@ int run() {
     if (DEBUG_LEVEL >= DEBUG_HIGH) {
         printf("start run\n");
     }
-    init_clock_hms_state();
+    init_clock_hms_state(&wifi_status);
     while (1) {
         fill_frame(0, 0, 0);
         ///////////////////////////

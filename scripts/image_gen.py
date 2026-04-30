@@ -2,10 +2,10 @@ import numpy as np
 import cv2
 
 # set these manually
-width = 5
+width = 8
 height = 6
-fname = "wifi_disconnected"
-cname = "wifi_disconnected"
+fname = "clear"
+cname = "clear"
 
 black_is_transparent = True
 

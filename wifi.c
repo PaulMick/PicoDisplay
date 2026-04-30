@@ -8,7 +8,10 @@
 #include "secrets/wifi_secrets.h"
 #include "wifi.h"
 
-int init_wifi() {
+int *wifi_connected;
+
+int init_wifi(int *wifi_con_in) {
+    wifi_connected = wifi_con_in;
     int init_code = cyw43_arch_init();
     if (init_code) {
         if (DEBUG_LEVEL >= DEBUG_MINIMAL) {
@@ -87,16 +90,19 @@ int is_wifi_connected() {
 void start_check_connect_wifi() {
     hw_clear_bits(&timer1_hw->intr, 1 << 3);
     if (!WIFI_ENABLED) {
+        *wifi_connected = 0;
         return;
     }
     if (DEBUG_LEVEL >= DEBUG_HIGH) {
         printf("start_check_connect_wifi\n");
     }
     if (!is_wifi_connected()) {
+        *wifi_connected = 0;
         connect_wifi();
         uint64_t target = timer1_hw->timerawl + WIFI_RETRY_TIME_SEC * 1000000;
         timer_hardware_alarm_set_target(timer1_hw, 3, target);
     } else {
+        *wifi_connected = 1;
         uint64_t target = timer1_hw->timerawl + WIFI_CHECK_TIME_SEC * 1000000;
         timer_hardware_alarm_set_target(timer1_hw, 3, target);
     }
