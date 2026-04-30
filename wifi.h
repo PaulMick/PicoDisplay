@@ -7,7 +7,8 @@
 
 int init_wifi(int *wifi_connected);
 int connect_wifi();
+void disconnect_wifi();
 int is_wifi_connected();
-void start_check_connect_wifi();
+void set_wifi_status(int status);
 
 #endif

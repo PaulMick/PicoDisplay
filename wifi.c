@@ -11,6 +11,9 @@
 int *wifi_connected;
 
 int init_wifi(int *wifi_con_in) {
+    if (DEBUG_LEVEL >= DEBUG_HIGH) {
+        printf("init_wifi\n");
+    }
     wifi_connected = wifi_con_in;
     int init_code = cyw43_arch_init();
     if (init_code) {
@@ -24,22 +27,24 @@ int init_wifi(int *wifi_con_in) {
     }
     cyw43_arch_enable_sta_mode();
     cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, 1);
-    hw_set_bits(&timer1_hw->inte, 1 << 3);
-    irq_set_exclusive_handler(timer_hardware_alarm_get_irq_num(timer1_hw, 3), start_check_connect_wifi);
-    irq_set_enabled(timer_hardware_alarm_get_irq_num(timer1_hw, 3), true);
     return init_code;
 }
 
 int connect_wifi() {
+    if (DEBUG_LEVEL >= DEBUG_HIGH) {
+        printf("connect_wifi\n");
+    }
     int connect_code = -67;
     connect_code = cyw43_arch_wifi_connect_timeout_ms(WIFI_SSID, WIFI_PASSWORD, WIFI_AUTH, 5000);
-    if (connect_code) {
-        if (DEBUG_LEVEL >= DEBUG_NORMAL) {
-            fprintf(stderr, "Timed out connecting to network \"%s\", code %d\n", WIFI_SSID, connect_code);
-        }
-    } else {
+    if (connect_code == 0) {
+        *wifi_connected = 1;
         if (DEBUG_LEVEL >= DEBUG_HIGH) {
             printf("Connected to %s\n", WIFI_SSID);
+        }
+    } else {
+        *wifi_connected = 0;
+        if (DEBUG_LEVEL >= DEBUG_NORMAL) {
+            fprintf(stderr, "Timed out connecting to network \"%s\", code %d\n", WIFI_SSID, connect_code);
         }
     }
     return connect_code;
@@ -87,23 +92,15 @@ int is_wifi_connected() {
     }
 }
 
-void start_check_connect_wifi() {
-    hw_clear_bits(&timer1_hw->intr, 1 << 3);
-    if (!WIFI_ENABLED) {
-        *wifi_connected = 0;
-        return;
-    }
+void disconnect_wifi() {
     if (DEBUG_LEVEL >= DEBUG_HIGH) {
-        printf("start_check_connect_wifi\n");
+        printf("disconnect_wifi\n");
     }
-    if (!is_wifi_connected()) {
-        *wifi_connected = 0;
-        connect_wifi();
-        uint64_t target = timer1_hw->timerawl + WIFI_RETRY_TIME_SEC * 1000000;
-        timer_hardware_alarm_set_target(timer1_hw, 3, target);
-    } else {
-        *wifi_connected = 1;
-        uint64_t target = timer1_hw->timerawl + WIFI_CHECK_TIME_SEC * 1000000;
-        timer_hardware_alarm_set_target(timer1_hw, 3, target);
-    }
+    *wifi_connected = 0;
+    cyw43_wifi_leave(&cyw43_state, CYW43_ITF_STA);
+    sleep_ms(100);
+}
+
+void set_wifi_status(int status) {
+    *wifi_connected = status;
 }

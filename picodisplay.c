@@ -26,8 +26,7 @@ int init() {
 
     // wifi
     init_wifi(&wifi_status);
-    start_check_connect_wifi();
-
+    connect_wifi();
 
     // ntp
     init_ntp();

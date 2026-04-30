@@ -8,6 +8,7 @@
 
 #include "secrets/ntp_secrets.h"
 #include "ntp.h"
+#include "wifi.h"
 #include "debug_utils.h"
 
 static void ntp_result(ntp_t* state, int status, time_t *result) {
@@ -29,10 +30,9 @@ static void ntp_result(ntp_t* state, int status, time_t *result) {
 }
 
 static void ntp_request(ntp_t *state) {
-    // cyw43_arch_lwip_begin/end should be used around calls into lwIP to ensure correct locking.
-    // You can omit them if you are in a callback from lwIP. Note that when using pico_cyw_arch_poll
-    // these calls are a no-op and can be omitted, but it is a good practice to use them in
-    // case you switch the cyw43_arch type later.
+    if (DEBUG_LEVEL >= DEBUG_HIGH) {
+        printf("Making new NTP request\n");
+    }
     cyw43_arch_lwip_begin();
     struct pbuf *p = pbuf_alloc(PBUF_TRANSPORT, NTP_MSG_LEN, PBUF_RAM);
     uint8_t *req = (uint8_t *) p->payload;
@@ -47,8 +47,6 @@ static void ntp_recv(void *arg, struct udp_pcb *pcb, struct pbuf *p, const ip_ad
     ntp_t *state = (ntp_t*)arg;
     uint8_t mode = pbuf_get_at(p, 0) & 0x7;
     uint8_t stratum = pbuf_get_at(p, 1);
-
-    // Check the result
     if (ip_addr_cmp(addr, &state->ntp_server_address) && port == NTP_PORT && p->tot_len == NTP_MSG_LEN &&
         mode == 0x4 && stratum != 0) {
         uint8_t seconds_buf[4] = {0};
@@ -69,6 +67,7 @@ static void ntp_recv(void *arg, struct udp_pcb *pcb, struct pbuf *p, const ip_ad
 static void ntp_dns_found(const char *hostname, const ip_addr_t *ipaddr, void *arg) {
     ntp_t *state = (ntp_t *) arg;
     if (ipaddr) {
+        set_wifi_status(1);
         state->ntp_server_address = *ipaddr;
         if (DEBUG_LEVEL >= DEBUG_NORMAL) {
             printf("ntp address %s\n", ipaddr_ntoa(ipaddr));
@@ -78,13 +77,16 @@ static void ntp_dns_found(const char *hostname, const ip_addr_t *ipaddr, void *a
         if (DEBUG_LEVEL >= DEBUG_NORMAL) {
             printf("ntp dns request failed\n");
         }
+        disconnect_wifi();
+        sleep_ms(100);
+        connect_wifi();
         ntp_result(state, -1, NULL);
     }
 }
 
 static void request_worker_fn(__unused async_context_t *context, async_at_time_worker_t *worker) {
     ntp_t* state = (ntp_t *) worker->user_data;
-    hard_assert(async_context_add_at_time_worker_in_ms(cyw43_arch_async_context(), &state->resend_worker, NTP_RESEND_TIME_MS)); // in case UDP request is lost
+    async_context_add_at_time_worker_in_ms(cyw43_arch_async_context(), &state->resend_worker, NTP_RESEND_TIME_MS); // in case UDP request is lost
     int err = dns_gethostbyname(NTP_SERVER, &state->ntp_server_address, ntp_dns_found, state);
     if (err == ERR_OK) {
         ntp_request(state); // Cached DNS result, make NTP request
@@ -99,8 +101,8 @@ static void request_worker_fn(__unused async_context_t *context, async_at_time_w
 static void resend_worker_fn(__unused async_context_t *context, async_at_time_worker_t *worker) {
     ntp_t* state = (ntp_t *) worker->user_data;
     if (DEBUG_LEVEL >= DEBUG_NORMAL) {
-            printf("ntp request failed\n");
-        }
+        printf("ntp request failed\n");
+    }
     ntp_result(state, -1, NULL);
 }
 
