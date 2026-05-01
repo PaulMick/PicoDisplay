@@ -60,7 +60,7 @@ err_t http_client_header_print_fn(__unused httpc_state_t *connection, __unused v
     }
     u16_t offset = 0;
     while (offset < hdr->tot_len && offset < hdr_len) {
-        char c = (char)pbuf_get_at(hdr, offset++);
+        char c = (char) pbuf_get_at(hdr, offset++);
         if (DEBUG_LEVEL >= DEBUG_HIGH) {
             putchar(c);
         }
@@ -74,7 +74,7 @@ err_t http_client_receive_print_fn(__unused void *arg, __unused struct altcp_pcb
     }
     u16_t offset = 0;
     while (offset < p->tot_len) {
-        char c = (char)pbuf_get_at(p, offset++);
+        char c = (char) pbuf_get_at(p, offset++);
         if (DEBUG_LEVEL >= DEBUG_HIGH) {
            putchar(c);
         }
@@ -135,7 +135,9 @@ weather_t get_weather() {
     req.recv_fn = http_client_receive_print_fn;
 
     int result = http_client_request_sync(cyw43_arch_async_context(), &req);
-    printf("result: %d\n", result);
+    if (DEBUG_LEVEL >= DEBUG_HIGH) {
+        printf("http result: %d\n", result);
+    }
 
     return (weather_t) {0};
 }

@@ -27,6 +27,7 @@ int init_wifi(int *wifi_con_in) {
     }
     cyw43_arch_enable_sta_mode();
     cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, 1);
+    cyw43_wifi_pm(&cyw43_state, CYW43_PERFORMANCE_PM);
     return init_code;
 }
 
